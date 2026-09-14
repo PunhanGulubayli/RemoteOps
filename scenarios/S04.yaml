@@ -1,0 +1,64 @@
+id: S04
+ad: "Cevher hattini devreye alma"
+aciklama: >
+  Vardiya basi. Cevher hatti tamamen durmus durumda. Hatti DOGRU SIRAYLA
+  devreye alin. Baslatma sirasi akistan GERIYE dogrudur: once bosaltan
+  ekipman calisir, sonra besleyen. Yanlis sirada baslatirsaniz interlock
+  izin vermez - cunku gercek tesiste malzeme yigilir ve bant kopar.
+sure_sn: 300
+ekran: cevher
+
+gorevler:
+  - ad: "Cevher hattini devreye al"
+    aciklama: >
+      Hat durdurulmus. Dogru baslatma sirasi: CV02 -> CV01 -> CR01 -> FE01.
+      Her ekipmana tiklayip faceplate'ten BASLAT deyin.
+    ekran: cevher
+    ekran_ad: "CEVHER HATTI"
+    adimlar:
+      - metin: "CV02 bandini baslatin (skip besleme bandi)"
+        hedef: "CV02"
+        ipucu: "Akisin EN SONUNDAKI ekipman once calisir - bosaltacak yer hazir olmali."
+        tamam: { etiket: "motor.CV02.durum", deger: "isliyir" }
+      - metin: "CV01 bandini baslatin (kirici cikis bandi)"
+        hedef: "CV01"
+        ipucu: "CV01, CV02 calismadan baslamaz; malzemeyi bosaltacagi yer olmali."
+        tamam: { etiket: "motor.CV01.durum", deger: "isliyir" }
+      - metin: "CR01 cene kiricisini baslatin"
+        hedef: "CR01"
+        ipucu: "Kirici, kirdigi malzemeyi CV01'e bosaltir. CV01 calismadan baslamaz."
+        tamam: { etiket: "motor.CR01.durum", deger: "isliyir" }
+      - metin: "FE01 apron besleyiciyi baslatin"
+        hedef: "FE01"
+        ipucu: "Besleyici EN SON calisir - kiriciyi bos calisirken doldurmak icin."
+        tamam: { etiket: "motor.FE01.durum", deger: "isliyir" }
+
+  - ad: "Uretimi nominal debiye getir"
+    aciklama: >
+      Hat calisiyor. Besleyici hizini (VSD) ayarlayarak bant yukunu
+      250-380 t/h araligina getirin. Kirici akimini izleyin - 420 A ustu
+      tikanma riskidir.
+    ekran: cevher
+    ekran_ad: "CEVHER HATTI"
+    adimlar:
+      - metin: "FE01 faceplate'inden VSD hizini %85'e cikarin"
+        hedef: "FE01"
+        ipucu: "Ekipmana tiklayin, acilan panelde kaydiriciyi kullanin ve UYGULA deyin."
+        tamam: { etiket: "bant.CV01.yuk", ust: 250 }
+
+optimal:
+  - t_hedef: 40
+    ad: "CV02 baslatildi"
+    kontrol: { hedef: "motor.CV02", emr: "basla" }
+  - t_hedef: 55
+    ad: "CV01 baslatildi"
+    kontrol: { hedef: "motor.CV01", emr: "basla" }
+  - t_hedef: 70
+    ad: "CR01 baslatildi"
+    kontrol: { hedef: "motor.CR01", emr: "basla" }
+  - t_hedef: 85
+    ad: "FE01 baslatildi"
+    kontrol: { hedef: "motor.FE01", emr: "basla" }
+
+basari:
+  - { etiket: "bant.CV01.yuk", kosul: "ust", deger: 250.0 }

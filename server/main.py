@@ -144,8 +144,10 @@ async def sebeke_kaydet(sid: str, tanim: dict):
 class OturumDurumu:
     """Bir egitim oturumu: simulasyon + senaryo + koc + kayit."""
 
-    def __init__(self, senaryo_id: str = VARSAYILAN_SENARYO, sebeke_id: str = "ocak1"):
+    def __init__(self, senaryo_id: str = VARSAYILAN_SENARYO, sebeke_id: str = "ocak1",
+                 mod: str = "guided"):
         self.sebeke_id = sebeke_id
+        self.mod = mod
         self.sim = Simulasyon.olustur(KOK / "data" / f"sebeke_{Path(sebeke_id).name}.json")
         self.koc = Koc()
         self.koc.ogren(self.sim)
@@ -198,13 +200,30 @@ async def ws_uc(ws: WebSocket):
     sema = ws.query_params.get("sema", "ocak1")
     if not (KOK / "data" / f"sebeke_{Path(sema).name}.json").exists():
         sema = "ocak1"
-    od = OturumDurumu(sebeke_id=sema)
+    mod = ws.query_params.get("mod", "guided")
+    if mod not in ("guided", "hints", "independent", "exam"):
+        mod = "guided"
+    senaryo = ws.query_params.get("senaryo", VARSAYILAN_SENARYO)
+    if not (KOK / "scenarios" / f"{Path(senaryo).name}.yaml").exists():
+        senaryo = VARSAYILAN_SENARYO
+    od = OturumDurumu(senaryo_id=senaryo, sebeke_id=sema, mod=mod)
 
     async def gonder(m: dict):
         await ws.send_text(json.dumps(m, ensure_ascii=False))
 
-    await gonder(od.sim.init_mesaji(
-        {"id": od.senaryo.id, "ad": od.senaryo.ad, "sure_sn": od.senaryo.sure_sn}))
+    def init_paketi():
+        m = od.sim.init_mesaji({
+            "id": od.senaryo.id, "ad": od.senaryo.ad,
+            "sure_sn": od.senaryo.sure_sn,
+            "aciklama": (od.senaryo.aciklama or "").strip(),
+            "ekran": od.senaryo.ekran,
+        })
+        m["mod"] = od.mod
+        # SINAV modunda yonlendirme YOK — adimlar istemciye hic gonderilmez
+        m["gorevler"] = [] if od.mod == "exam" else od.senaryo.gorevler
+        return m
+
+    await gonder(init_paketi())
 
     async def dongu():
         """1 Hz simulasyon dongusu."""
@@ -247,19 +266,14 @@ async def ws_uc(ws: WebSocket):
 
             elif tip == "senaryo":
                 emr = m.get("emr")
-                if emr == "sifirla":
+                if emr in ("sifirla", "basla"):
+                    if m.get("mod"):
+                        od.mod = m["mod"]
                     od.yeniden_kur(m.get("id"))
-                    await gonder(od.sim.init_mesaji(
-                        {"id": od.senaryo.id, "ad": od.senaryo.ad,
-                         "sure_sn": od.senaryo.sure_sn}))
+                    await gonder(init_paketi())
                 elif emr == "durdur":
                     od.calisiyor = False
                     await gonder(od.oturum.bitti_mesaji(od.sim, "kullanici_durdurdu"))
-                elif emr == "basla":
-                    od.yeniden_kur(m.get("id"))
-                    await gonder(od.sim.init_mesaji(
-                        {"id": od.senaryo.id, "ad": od.senaryo.ad,
-                         "sure_sn": od.senaryo.sure_sn}))
             else:
                 await gonder({"tip": "xeta", "kod": "GECERSIZ_EMR",
                               "mesaj": f"bilinmeyen mesaj tipi: {tip}"})

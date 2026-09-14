@@ -12,10 +12,32 @@ olaylar:
     ad: "ANA FAN DURDU (elektrik arizasi)"
     etki: { hedef: "fan.ana_1", emr: "dayandir" }
 
+ekran: hava
+
+gorevler:
+  - ad: "Fan arizasinda acil durum prosedurunu uygula"
+    aciklama: >
+      Ana fan durdu. Hava akisi yok, metan birikiyor. Once ATESLEME KAYNAGINI
+      kaldirin, sonra fani yeniden baslatin.
+    ekran: hava
+    ekran_ad: "HAVALANDIRMA"
+    adimlar:
+      - metin: "Konveyoru durdurun (atesleme kaynagini kaldirin)"
+        hedef: "CV01"
+        ipucu: "Metan birikirken elektrikli ekipman atesleme kaynagidir."
+        tamam: { etiket: "motor.CV01.durum", deger: "dayandi" }
+      - metin: "Ana fani yeniden baslatin"
+        hedef: "ana_1"
+        ipucu: "Fan sembolune tiklayin, BASLAT deyin."
+        tamam: { etiket: "fan.ana_1.durum", deger: "isliyir" }
+      - metin: "Ocak debisinin normale dondugunu dogrulayin (>100 m3/s)"
+        ipucu: "Fan basinci kurulunca debi saniyeler icinde geri gelir."
+        tamam: { etiket: "fan.ana_1.debi", ust: 100 }
+
 optimal:
   - t_hedef: 60
     ad: "Konveyor durduruldu (atesleme kaynagi kaldirildi)"
-    kontrol: { hedef: "konveyer.K1", emr: "dayandir" }
+    kontrol: { hedef: "motor.CV01", emr: "dayandir" }
   - t_hedef: 75
     ad: "Ana fan yeniden baslatildi"
     kontrol: { hedef: "fan.ana_1", emr: "basla" }

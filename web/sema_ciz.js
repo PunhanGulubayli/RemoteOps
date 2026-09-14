@@ -139,51 +139,8 @@ function semOlcum(x, y, bx, by, fn, no, elemanId, etiket, birim) {
   </g>`;
 }
 
-/** Santrifuj pompa: salyangoz govde + emme/basma + motor + kaide */
-function semPompa(x, y, id) {
-  return `<g id="sim_nasos_${id}" class="ekipman tik" data-tik="1">
-    <path class="ek-govde" d="M${x - 15},${y + 15} L${x - 15},${y - 4}
-          A15,15 0 1,1 ${x + 15},${y + 2} L${x + 15},${y + 15} Z"/>
-    <circle id="nasos_${id}_govde" cx="${x}" cy="${y - 2}" r="10" class="ek-dolgu"/>
-    <circle cx="${x}" cy="${y - 2}" r="3" class="ek-gobek"/>
-    <rect x="${x - 22}" y="${y + 15}" width="44" height="6" class="ek-flans"/>
-    <rect x="${x + 15}" y="${y - 20}" width="10" height="9" class="ek-flans"/>
-    <rect x="${x - 11}" y="${y - 34}" width="22" height="13" class="ek-motor"/>
-    <text x="${x}" y="${y + 33}" class="et-ad" text-anchor="middle">${esc(id)}</text>
-    <text id="nasos_${id}_durum" x="${x}" y="${y + 44}" class="et-dg"
-          text-anchor="middle">—</text>
-  </g>`;
-}
 
-/** Sump / su toplama havuzu — seviye dolgulu tank */
-function semSump(x, y, id) {
-  const w = 92, h = 56;
-  return `<g class="ekipman">
-    <clipPath id="kes_${id}"><rect x="${x}" y="${y}" width="${w}" height="${h}"/></clipPath>
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" class="ek-tank"/>
-    <rect id="SUMP_${id}_dolgu" x="${x}" y="${y + h}" width="${w}" height="0"
-          class="ek-su" clip-path="url(#kes_${id})"/>
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" class="ek-tank-on"/>
-    <path class="ek-tank-alt" d="M${x},${y + h} L${x + w / 2},${y + h + 13} L${x + w},${y + h} Z"/>
-    <text x="${x + w / 2}" y="${y - 7}" class="et-ad" text-anchor="middle">SUMP ${esc(id)}</text>
-  </g>`;
-}
 
-/** Konveyor: kuyruk/bas tamburu + bant + tahrik motoru */
-function semKonveyor(x, y, id) {
-  const w = 176, e = 26;
-  return `<g id="sim_konveyer_${id}" class="ekipman tik" data-tik="1">
-    <circle cx="${x}" cy="${y}" r="11" class="ek-dolgu"/>
-    <circle id="konveyer_${id}_govde" cx="${x + w}" cy="${y - e}" r="14" class="ek-dolgu"/>
-    <path class="ek-bant" d="M${x},${y - 11} L${x + w},${y - e - 14}
-          M${x},${y + 11} L${x + w},${y - e + 14}"/>
-    <path class="ek-bant-yuk" d="M${x + 8},${y - 13} L${x + w - 10},${y - e - 16}"/>
-    <rect x="${x + w - 8}" y="${y - e + 16}" width="22" height="13" class="ek-motor"/>
-    <text x="${x + w / 2}" y="${y + 30}" class="et-ad" text-anchor="middle">KONVEYÖR ${esc(id)}</text>
-    <text id="konveyer_${id}_durum" x="${x + w / 2}" y="${y + 41}" class="et-dg"
-          text-anchor="middle">—</text>
-  </g>`;
-}
 
 /* ------------------------------------------------------------------ yardimci */
 
@@ -249,8 +206,7 @@ function semaUret(sb) {
   const dugum = {}; sb.dugumler.forEach(d => dugum[d.id] = d);
   const W = (sb.cizim && sb.cizim.genislik) || 1020;
   const AG_H = (sb.cizim && sb.cizim.yukseklik) || 620;
-  const BAND = 132;                 // yardimci sistemler seridi
-  const H = AG_H + BAND;
+  const H = AG_H;
   const servis = servisBelirle(sb);
 
   const baglanti = {}, tiklanabilir = {};
@@ -363,49 +319,11 @@ function semaUret(sb) {
                  <text x="${d.x + 7}" y="${d.y - 6}" class="et-dg">${esc(d.id)}</text>`;
   }
 
-  /* ---- yardimci sistemler seridi: su atma + tasima ----
-     Gercek kontrol odasi ekraninda tum ekipman semanin UZERINDEDIR. */
-  const by = AG_H + 46;
-  let yardimci = `<g id="kat-yardimci">
-    <line x1="14" y1="${AG_H + 8}" x2="${W - 14}" y2="${AG_H + 8}" class="band-ayirac"/>
-    <text x="18" y="${AG_H + 26}" class="band-baslik">YARDIMCI SİSTEMLER</text>
-    ${semSump(150, by - 14, 'S1')}
-    ${semPompa(292, by + 6, 'P1')}
-    ${semPompa(372, by + 6, 'P2')}
-    <path class="ek-su-hat" d="M242,${by + 14} L268,${by + 14} M316,${by - 14}
-          L348,${by - 14} M396,${by - 14} L430,${by - 14} L430,${by + 20}"/>
-    ${semKonveyor(660, by + 14, 'K1')}
-  </g>`;
-  olcum += semOlcum(196, by + 42, 150, AG_H + BAND - 52, 'LT', `${no++}`,
-                    'SUMP_S1_seviyye', 'SUMP SEVİYESİ', '%');
-  olcum += semOlcum(836, by - 12, 900, AG_H + BAND - 52, 'IT', `${no++}`,
-                    'KONVEYER_K1_akim', 'KONVEYÖR AKIMI', 'A');
-  baglanti['SUMP_S1_seviyye']   = { tip: 'deger', etiket: 'sump.S1.seviyye', ondalik: 1 };
-  baglanti['SUMP_S1_seviyye_balon'] = { tip: 'balon', etiket: 'sump.S1.seviyye' };
-  baglanti['SUMP_S1_dolgu']     = { tip: 'seviye', etiket: 'sump.S1.seviyye',
-                                    x: 150, y: by - 14, w: 92, h: 56 };
-  baglanti['KONVEYER_K1_akim']  = { tip: 'deger', etiket: 'konveyer.K1.akim', ondalik: 0 };
-  baglanti['KONVEYER_K1_akim_balon'] = { tip: 'balon', etiket: 'konveyer.K1.akim' };
-  for (const nid of ['P1', 'P2']) {
-    baglanti[`nasos_${nid}_govde`] = { tip: 'govde', etiket: `nasos.${nid}.durum`,
-                                       dolu_durumlar: ['isliyir'] };
-    baglanti[`nasos_${nid}_durum`] = { tip: 'durum', etiket: `nasos.${nid}.durum` };
-    tiklanabilir[`sim_nasos_${nid}`] = {
-      hedef: `nasos.${nid}`, etiket: `NASOS ${nid}`, baglanti: `nasos.${nid}.durum`,
-      emirler: { isliyir: 'dayandir', dayandi: 'basla' } };
-  }
-  baglanti['konveyer_K1_govde'] = { tip: 'govde', etiket: 'konveyer.K1.durum',
-                                    dolu_durumlar: ['isliyir'] };
-  baglanti['konveyer_K1_durum'] = { tip: 'durum', etiket: 'konveyer.K1.durum' };
-  tiklanabilir['sim_konveyer_K1'] = {
-    hedef: 'konveyer.K1', etiket: 'KONVEYÖR K1', baglanti: 'konveyer.K1.durum',
-    emirler: { isliyir: 'dayandir', dayandi: 'basla', ariza: 'basla' } };
-
   /* ---- legend (MSHA zorunlulugu) ---- */
   const lg = (yy, sinif, ad) =>
     `<g transform="translate(0 ${yy})"><line x1="8" y1="0" x2="34" y2="0"
         class="lg-cizgi ${sinif}"/><text x="40" y="4" class="lg-yazi">${ad}</text></g>`;
-  const legend = `<g id="legend" transform="translate(${W - 202} ${AG_H - 112})">
+  const legend = `<g id="legend" transform="translate(${W - 202} ${H - 116})">
     <rect x="0" y="0" width="188" height="96" class="lg-kutu"/>
     <text x="8" y="15" class="lg-baslik">LEJANT</text>
     ${lg(30, 'sv-temiz', 'Temiz hava (giris)')}
@@ -426,7 +344,6 @@ function semaUret(sb) {
   <g id="kat-ok">${oklar}</g>
   <g id="kat-dugum">${dugumler}</g>
   <g id="kat-ekipman">${ekipman}</g>
-  ${yardimci}
   <g id="kat-olcum">${olcum}</g>
   ${legend}
 </svg>`;

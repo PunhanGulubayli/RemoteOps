@@ -4,8 +4,8 @@
 > yeni komanda üzvü və ya kənar adam bu faylı oxuyanda layihəni tam başa düşməlidir.
 > **Hər faz bitəndə §3 STATUS bölməsi yenilənməlidir.**
 
-**Son yenilənmə:** 2026-09-14 · Faz 0–6 tam, Faz 7 qismən, Faz 8 tam
-**Vəziyyət:** 26/26 fizika · 28/28 uçdan-uca · müstəqil həlledici fərqi 0.0001%
+**Son yenilənmə:** 2026-09-14 · Faz 0–6, 8, 9, 10 tam · Faz 7 qismən
+**Vəziyyət:** 26/26 fizika · **39/39 uçdan-uca** · müstəqil həlledici fərqi 0.0001%
 
 ---
 
@@ -72,8 +72,10 @@ yetkinlik ölçümüdür."* Bu, zəiflik deyil — **mühəndis yetkinliyi** kim
     trend qrafiki (hədd xətləri ilə), AI Koç paneli, AAR pəncərəsi
   → Doğrulandı: ARIN 3 rəngsiz (normal), ARIN 1 sarı (P3), ARIN 2 qırmızı (P1)
   → Simulyasiya sürəti: **0.43 ms/tick** (1 Hz büdcəsinin ~0.04%-i)
-  ⚠️ Bu fazdakı əl ilə çəkilmiş `web/mimic/ocak1.svg` + `map.json` **Faz 8-də
-     əvəz olundu** (avtomatik generasiya). Fayllar arxiv olaraq qalır, işlədilmir.
+  ⚠️ Bu fazın **hər iki hissəsi sonradan əvəz olundu**: əl ilə çəkilmiş
+     `web/mimic/*` (Faz 8 — avtomatik generasiya) və `web/mock/*` +
+     `engine/mock_uret.py` (Faz 10 — arayüz artıq həmişə canlı WS işlədir).
+     Hamısı **silindi**; tarixi qeyd olaraq burada qalır.
 
 - **Faz 3+4+5+6:** `server/main.py` (FastAPI + WebSocket, 1 Hz döngü, CSV qeyd),
   `server/senaryo.py` (YAML ssenari motoru + ISA-18.2 balı),
@@ -106,6 +108,24 @@ yetkinlik ölçümüdür."* Bu, zəiflik deyil — **mühəndis yetkinliyi** kim
     (bax §9) və brauzer önbelleği (bax §9)
   → Doğrulandı: faceplate-dən P2 nasosu başladıldı (88 A); TENZIM 1 → %30 →
     ARIN 3 debisi 35.7→21.0, ARIN 1 39.9→42.8 m³/s (hava yenidən paylandı)
+
+- **Faz 10 — Endüstriyel HMI + proses genişləməsi** ⭐
+  **Backend:** `engine/proses.py` — cevher hattı (BN01 bunker → FE01 apron besleyici →
+  CR01 çene kırıcı → CV01 bant → BN02 surge → CV02 bant → skip) + su atma
+  (TK01 tank → HV01 motorlu vana → S1 sump → P1/P2 pompalar).
+  **Gerçək sənaye davranışı:** başlatma sırası akıştan geriye (CV02→CV01→CR01→FE01),
+  interlock rədd edir, motor trip **RESET** istəyir, pompa quru işləmə qoruması,
+  bunker yüksək səviyyə blokajı. Etiket sayı 91 → **135**.
+  **Frontend:** `web/lib/sym.js` (ISA-5.1 simvol kitabxanası: pompa/kırıcı/besleyici/
+  bunker/tank/sump/vana/fan/konveyer/ölçüm balonu), `web/lib/screens.js` (P&ID ekranları
+  + hər ekipmanın **nə iş gördüyü** izahı), `web/lib/faceplate.js` (interlock/permissive
+  göstərən motor kontrol paneli), `web/lib/training.js` (**4 təlim rejimi**),
+  `web/hmi.css`, `web/app.js` (yenidən yazıldı).
+  **6 ekran:** Genel Bakış · Havalandırma · Cevher Hattı · Su Atma · Alarmlar · Trendler
+  **2 yeni ssenari:** S04 (hat devreye alma) · S05 (sump taşma riski)
+  **Koç:** 4 yeni qayda (motor trip, kırıcı yükü, bunker, interlock)
+  → Silindi: `web/mimic/`, `web/mock/`, `engine/mock_uret.py`,
+    `sema_ciz.js`-dəki təkrar yardımçı bant
 
 ### 🔄 İndi
 - **Faz 7 (qalan):** NIOSH MFIRE müqayisəsi, slaydlar, demo məşqi
@@ -173,26 +193,30 @@ RemoteOps/
 │
 ├── engine/                                            [Üzv 1]
 │   ├── network.py          Hardy-Cross + Newton-Raphson hibrid həlledici
-│   ├── sim.py              qaz + su + konveyer + alarm + tick
+│   ├── proses.py           cevher hattı + su atma · motor/bunker/vana · INTERLOCK
+│   ├── sim.py              havalandırma + qaz + proses → alarm + tick
 │   ├── test_network.py     26 fizika yoxlaması
 │   ├── dogrulama.py        MÜSTƏQİL çözücü çarpaz yoxlaması
-│   ├── mock_uret.py        frontend üçün mock data üretir
 │   └── mfire_disa_aktar.py MFIRE müqayisə cədvəli
 │
 ├── server/                                            [Üzv 2]
 │   ├── main.py             FastAPI + WebSocket + API + no-cache
 │   ├── senaryo.py          YAML ssenari motoru + ISA-18.2 balı
 │   ├── koc.py              fizika-qalığı əsaslı XAI koç (5 qayda)
-│   └── test_e2e.py         28 uçdan-uca yoxlama
+│   └── test_e2e.py         39 uçdan-uca yoxlama
 │
 ├── web/                                               [Üzv 3 + 4]
-│   ├── index.html          simulyator ekranı + faceplate
-│   ├── app.js              telemetriya · render · faceplate · AAR
-│   ├── sema_ciz.js         OTOMATİK proses sxemi üreteci
-│   ├── sema.css            iki tema (koyu / acik)
-│   ├── editor.html/js      sxem redaktoru
-│   ├── mock/               mock data (fizikadan üretilir)
-│   └── mimic/              ⚠️ ARXİV — Faz 2-nin əl ilə SVG-si, işlədilmir
+│   ├── index.html          kontrol otağı karkası
+│   ├── app.js              telemetriya · ekran · bağlama · AAR
+│   ├── hmi.css             endüstriyel tema (koyu / acik)
+│   ├── lib/
+│   │   ├── sym.js          ISA-5.1 SVG simvol kitabxanası
+│   │   ├── screens.js      P&ID ekranları + proses izahları
+│   │   ├── faceplate.js    ekipman paneli (interlock/permissive)
+│   │   └── training.js     4 təlim rejimi
+│   ├── sema_ciz.js         havalandırma sxemi avtomatik üreteci
+│   ├── sema.css            havalandırma sxemi stilləri
+│   └── editor.html/js      şəbəkə redaktoru
 │
 ├── scenarios/  S01.yaml · S02.yaml · S03.yaml         [Üzv 5]
 ├── data/       sebeke_ocak1.json · sebeke_ocak2.json · kayitlar/*.csv
@@ -238,20 +262,30 @@ Backend ilə frontend arasındakı **yeganə** razılaşma. Tam detal: `contract
 }
 ```
 
-### Etiket qrupları (cəmi 91 etiket)
+### Etiket qrupları (cəmi 147 etiket)
 | Qrup | Say | Format | Nümunə |
 |---|---|---|---|
-| `fan` | 5 | `fan.<id>.<olcu>` | `fan.ana_1.debi` · `.basinc` · `.guc` · `.rpm` · `.durum` |
-| `qol` | 60 | `qol.<kolId>.<olcu>` | `qol.B05.debi` · `.hiz` · **`.yon`** (±1, ox istiqaməti) |
-| `arin` | 6 | `arin.<ARIN_n>.<olcu>` | `arin.ARIN_2.debi` · `.hiz` |
-| `qaz` | 9 | `qaz.<gaz>.<ARIN_n>` | `qaz.ch4.ARIN_2` (**tavan sensoru**) · `qaz.ch4_ort.*` (ortalama) · `qaz.o2.*` |
+| `fan` | 5 | `fan.<id>.<olcu>` | `.debi` `.basinc` `.guc` `.rpm` `.durum` |
+| `qol` | 60 | `qol.<kolId>.<olcu>` | `.debi` `.hiz` `.yon` (±1) |
+| `arin` | 6 | `arin.<ARIN_n>.<olcu>` | `.debi` `.hiz` |
+| `qaz` | 9 | `qaz.<gaz>.<ARIN_n>` | `qaz.ch4.ARIN_2` (**tavan sensoru**) · `ch4_ort` · `o2` |
 | `qapi` | 2 | `qapi.<id>.durum` | `acik` \| `bagli` |
 | `tenzim` | 1 | `tenzim.<id>.acilim` | 0–100 % |
-| `sump` | 1 | `sump.S1.seviyye` | 0–100 % |
-| `nasos` | 4 | `nasos.<id>.<olcu>` | `.durum` · `.akim` |
-| `konveyer` | 3 | `konveyer.K1.<olcu>` | `.akim` · `.yuk` · `.durum` |
+| **`motor`** | 36 | `motor.<id>.<olcu>` | `.durum` `.akim` `.yuk` `.trip` `.ariza` `.calisiyor` — **CR01 CV01 CV02 FE01 P1 P2** |
+| **`interlock`** | 12 | `interlock.<id>.<f>` | `.izin` (1/0) · `.sebep` (mətn) |
+| **`bunker`** | 4 | `bunker.<id>.<olcu>` | `.seviyye` `.ton` — BN01 BN02 |
+| **`tank`** | 1 | `tank.TK01.seviyye` | % |
+| **`vana`** | 2 | `vana.HV01.<f>` | `.acilim` `.durum` (`acik`\|`bagli`\|`hereket`) |
+| **`bant`** | 2 | `bant.<id>.yuk` | t/h |
+| **`vsd` / `css`** | 2 | — | `vsd.FE01.hiz` % · `css.CR01.acilim` mm |
+| `sump` | 2 | `sump.S1.<f>` | `.seviyye` `.hacim` |
+| **`basma`** | 2 | — | `.debi` L/s · `.basinc` bar |
+| **`uretim`** | 1 | — | `uretim.vardiya.ton` |
 
-**Durum dəyərləri:** `isliyir` · `dayandi` · `ariza` · `acik` · `bagli`
+**Durum dəyərləri:** `isliyir` · `dayandi` · `ariza` · `acik` · `bagli` · `hereket`
+
+⚠️ **`dayandi` ≠ `ariza`.** Dayanmış motor alarm deyil; trip edən motordur.
+Alarm `motor.<id>.ariza` (1/0) etiketinə baxır, `durum`-a yox.
 
 ### Mesaj tipləri
 | İstiqamət | Tip | Nə vaxt |
@@ -274,7 +308,7 @@ Backend ilə frontend arasındakı **yeganə** razılaşma. Tam detal: `contract
 | `GET /api/sebeke/{id}` | şəbəkə tərifi (**arayüz sxemi bundan üretir**) |
 | `POST /api/sebeke/_dogrula` | **real fizika mühərrikində həll et** (redaktor üçün) |
 | `POST /api/sebeke/{id}` | şəbəkəni saxla |
-| `WS /ws?sema={id}` | telemetriya. ⚠️ `sema` parametri **məcburidir** — ekrandakı sxem və simulyasiya eyni şəbəkə olmalıdır |
+| `WS /ws?sema={id}&mod={rejim}&senaryo={id}` | telemetriya. `mod`: `guided`\|`hints`\|`independent`\|`exam`. ⚠️ **`exam` rejimində server `gorevler` göndərmir** — yol göstərmə istemciyə heç çatmır |
 
 ---
 
@@ -340,16 +374,44 @@ Mədən ənənəsi dönüş havasına **qırmızı** deyir; ISA-18.2 qırmızın
 dönüş #A07A46 (oker), arın #7E6FA8 (bənövşəyi). Doymuş alarm rəngləri heç bir
 normal vəziyyətdə işlənmir. **Lejant bunu açıq yazır.**
 
+### Altı ekran
+| Ekran | Alan | Nə göstərir |
+|---|---|---|
+| Genel Bakış | TESİS | üç prosesin özət KPI-ları |
+| Havalandırma | ALAN 10 | şəbəkədən **avtomatik üretilən** ventilyasiya sxemi |
+| Cevher Hattı | ALAN 30 | BN01 → FE01 → CR01 → CV01 → BN02 → CV02 → skip |
+| Su Atma | ALAN 40 | TK01 → HV01 → S1 sump → P1/P2 → yüzey |
+| Alarmlar | ISA-18.2 | tam alarm siyahısı + performans KPI-ları |
+| Trendler | GEÇMİŞ | çoxlu ölçüm, eşik xətləri ilə |
+
+### Dörd təlim rejimi (istifadəçi seçir)
+| Rejim | Davranış |
+|---|---|
+| **Rehberli** | Hər addım sırayla göstərilir, ekipman ekranda işarələnir |
+| **İpuçlu** | Görev verilir; "İpucu" düyməsi növbəti addımı açır |
+| **Bağımsız** | Yalnız görev başlığı, yol göstərmə yox |
+| **Sınav** | Heç bir yardım yox — **server addımları göndərmir** |
+
+Addım tamamlanması **canlı dəyərdən** oxunur — əmr göndərildi deyə yox,
+proses həqiqətən o vəziyyətə gəldisə. Real səriştə ölçümü budur.
+
+### İstifadəçi nəyi dərhal görür
+- **Alan başlığı** — hansı prosesdə olduğu
+- **ⓘ Bu ekran nedir?** — prosesin məqsədi, axış zənciri və **hər ekipmanın nə iş gördüyü**
+- **Eğitim asistanı** — cari görev və addımlar
+- **? Sistem Hakkında** — bütün sistemin izahı (ilk açılışda avtomatik)
+
 ### Ekran anatomiyası
 ```
-┌ üst şerit ── marka · şema seçici · tema · editör · sıfırla ────────┐
-├ navigasyon bandı ── Genel│Havalandırma│Gaz│Su│Taşıma│Tanı ─────────┤
-├ alan başlığı ── "ÖRNEK YERALTI OCAK-1"  ·  senaryo  ·  süre ───────┤
-│ PROSES ŞEMASI                          │ ALARM LİSTESİ            │
-│  (otomatik üretilen mimik)             │ YZ KOÇ                   │
-│                                        │ TREND                    │
+┌ üst şerit ── marka · SENARYO seçici · EĞİTİM MODU · tema · editör ─┐
+├ navigasyon ── Genel│Havalandırma│Cevher Hattı│Su Atma│Alarm│Trend ─┤
+├ alan başlığı ── "ALAN 30 — CEVHER HATTI" · ⓘ · senaryo · süre ─────┤
+├ (açılır) BU EKRAN NEDİR? — proses özeti + ekipman açıklamaları ────┤
+│ PROSES ŞEMASI (P&ID)                   │ EĞİTİM ASİSTANI          │
+│  ekipmana tıkla → faceplate            │ ALARM LİSTESİ            │
+│                                        │ YZ KOÇ                   │
 ├ ALARM BANDI ── her zaman görünür, en yüksek öncelikli alarm ───────┤
-├ durum çubuğu ── kullanıcı · bağlantı · ISA-18.2 KPI · saat ────────┤
+├ durum çubuğu ── kullanıcı · bağlantı · ISA-18.2 KPI · üretim ──────┤
 ```
 
 ### İki tema
@@ -511,10 +573,10 @@ Problem ifadəmiz budur, "nitelikli operatör eksikliği" deyil.
 
 | # | Rol | Qovluq |
 |---|---|---|
-| 1 | Fizika mühərriki (Hardy-Cross, qaz, su) | `engine/` |
+| 1 | Fizika: şəbəkə həlli, qaz, cevher hattı, interlock | `engine/` |
 | 2 | Backend + WS + ssenari motoru + replay | `server/` |
-| 3 | Frontend A: sxem üreteci + redaktor | `web/sema_ciz.js`, `web/sema.css`, `web/editor.*` |
-| 4 | Frontend B: telemetriya, alarm, faceplate, AAR | `web/app.js`, `web/index.html` |
+| 3 | Frontend A: simvol kitabxanası + ekranlar + redaktor | `web/lib/sym.js`, `web/lib/screens.js`, `web/sema_ciz.js`, `web/editor.*` |
+| 4 | Frontend B: telemetriya, faceplate, təlim, AAR | `web/app.js`, `web/lib/faceplate.js`, `web/lib/training.js`, `web/hmi.css` |
 | 5 | Ssenari + skorlama + validasiya + slaydlar | `scenarios/`, `docs/` |
 
 **Hər axşam 15 dəqiqəlik status:** hər kəs 2 cümlə — nə bitdi, nə mane olur.
@@ -547,12 +609,13 @@ Problem ifadəmiz budur, "nitelikli operatör eksikliği" deyil.
 | **7** | MFIRE validasiyası + slaydlar + demo məşqi | Final paketi | 4 gün |
 | **8** | Çox sxem + sxem redaktoru | İstifadəçi öz ocağını çəkir | — |
 | **9** | Kontrol otağı arayüzü + faceplate | Real SCADA görünüşü | — |
+| **10** | Endüstriyel HMI + cevher/su prosesi | Real mining process control | — |
 
 **Vəziyyət (14 sentyabr):**
 
-| Faz | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🔄 | ✅ | ✅ |
+| Faz | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 🔄 | ✅ | ✅ | ✅ |
 
 Faz 8 və 9 planda yox idi — istifadəçi tələbi ilə əlavə olundu və bitdi.
 **Qalan yeganə iş Faz 7-dir.** Feature freeze: **26 sentyabr**.
@@ -572,19 +635,14 @@ python -m uvicorn server.main:app --port 8000
 |---|---|
 | http://localhost:8000/ | simulyator |
 | http://localhost:8000/editor.html | sxem redaktoru |
-| `?sema=ocak2` | fərqli şəbəkə aç |
-
-**Yalnız arayüz** (backend olmadan, mock data ilə):
-```bash
-python -m http.server 5500 --directory web
-```
+| `?sema=ocak2` | fərqli şəbəkə |
+| `?senaryo=S04` | fərqli ssenari ilə aç |
 
 **Testlər:**
 ```bash
 python engine/test_network.py    # fizika — 26 yoxlama
 python engine/dogrulama.py       # müstəqil çözücü çarpaz yoxlaması
 python server/test_e2e.py        # uçdan-uca — 28 yoxlama
-python engine/mock_uret.py       # mock datanı yenidən üret
 ```
 
 ### ⚠️ Tipik problemlər

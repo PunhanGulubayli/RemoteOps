@@ -12,6 +12,28 @@ olaylar:
     ad: "QAPI 1 acildi (vardiya degisimi)"
     etki: { hedef: "qapi.QAPI_1", emr: "ac" }
 
+ekran: hava
+
+gorevler:
+  - ad: "Kisa devreyi tespit et ve gider"
+    aciklama: >
+      Havalandirmada bir sapma var. Fan debisi ARTTI ama arinlara giden hava DUSTU.
+      Bu, kisa devrenin klasik imzasidir. Kaynagi bulun ve giderin.
+    ekran: hava
+    ekran_ad: "HAVALANDIRMA"
+    adimlar:
+      - metin: "Acik kalan hava kapisini bulun (QAPI 1)"
+        hedef: "QAPI_1"
+        ipucu: "Semada kapi sembolune bakin - acik kapinin yapragi acili durur."
+        tamam: { etiket: "qapi.QAPI_1.durum", deger: "acik" }
+      - metin: "QAPI 1 kapisini kapatin"
+        hedef: "QAPI_1"
+        ipucu: "Kapiya tiklayin, faceplate'ten KAPAT deyin."
+        tamam: { etiket: "qapi.QAPI_1.durum", deger: "bagli" }
+      - metin: "ARIN 2 debisinin normale dondugunu dogrulayin (>33 m3/s)"
+        ipucu: "Hava geri gelince CH4 de dusmeye baslar - hemen degil, gecikmeli."
+        tamam: { etiket: "arin.ARIN_2.debi", ust: 33 }
+
 optimal:
   - t_hedef: 90
     ad: "QAPI 1 kapatildi"

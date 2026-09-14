@@ -3,7 +3,11 @@
 > Backend (`server/`) ilə frontend (`web/`) arasındakı **yeganə** razılaşma.
 > Bu faylı dəyişmək = hər iki tərəfi dəyişmək. Dəyişiklik komandaya elan edilməlidir.
 >
-> **Versiya:** 1.1 · **Tarix:** 2026-09-14
+> **Versiya:** 1.2 · **Tarix:** 2026-09-14
+>
+> v1.2: cevher hattı + su atma prosesi (`motor` `interlock` `bunker` `tank`
+> `vana` `bant` `vsd` `css` `basma` `uretim` qrupları) · `ws?mod=` təlim rejimi ·
+> `init.gorevler` · `tick.engel` · `motor.*.ariza` (dayandı ≠ arıza).
 >
 > v1.1 dəyişikliyi: `qol.*.yon`, `arin.*`, `qaz.ch4_ort.*`, `qaz.o2.*`,
 > `fan.*.guc` etiketləri; `ws?sema=` parametri; HTTP API bölməsi;
@@ -14,8 +18,17 @@
 ## 1. Bağlantı
 
 ```
-ws://localhost:8000/ws?sema=ocak1
+ws://localhost:8000/ws?sema=ocak1&mod=guided&senaryo=S01
 ```
+
+| Parametr | Dəyər | Qeyd |
+|---|---|---|
+| `sema` | `ocak1` · `ocak2` · … | şəbəkə tərifi |
+| `mod` | `guided` \| `hints` \| `independent` \| `exam` | təlim rejimi |
+| `senaryo` | `S01`…`S05` | başlanğıc ssenarisi |
+
+⚠️ **`exam` rejimində server `init.gorevler`-i BOŞ göndərir** — yol göstərmə
+istemciyə heç çatmır. Digər rejimlərdə addımlar və ipuçları gəlir.
 
 ⚠️ **`sema` parametri məcburidir.** Ekranda göstərilən sxem ilə simulyasiya edilən
 şəbəkə **eyni olmalıdır**. Verilməzsə `ocak1` işlədilir. Sxem dəyişəndə arayüz
@@ -55,6 +68,22 @@ brauzer köhnə `js/css` oxumasın deyə.
 | | `qol.B05.yon` | **+1 / −1** — axın istiqaməti (ox simvolu bunu işlədir) |
 | `arin` | `arin.ARIN_2.debi` | m³/s |
 | | `arin.ARIN_2.hiz` | m/s |
+| **`motor`** | `motor.CR01.durum` | `isliyir` \| `dayandi` \| `ariza` |
+| | `motor.CR01.akim` | A |
+| | `motor.CR01.yuk` | % (nominala görə) |
+| | `motor.CR01.ariza` | **1/0** — alarmlar buna baxır |
+| | `motor.CR01.trip` | arıza səbəbi (mətn) |
+| | `motor.CR01.calisiyor` | 1/0 |
+| **`interlock`** | `interlock.CR01.izin` | 1/0 — indi başladıla bilər? |
+| | `interlock.CR01.sebep` | izin yoxsa səbəb (mətn) |
+| **`bunker`** | `bunker.BN01.seviyye` · `.ton` | % · t |
+| **`tank`** | `tank.TK01.seviyye` | % |
+| **`vana`** | `vana.HV01.acilim` · `.durum` | % · `acik`\|`bagli`\|`hereket` |
+| **`bant`** | `bant.CV01.yuk` | t/h |
+| **`vsd`** | `vsd.FE01.hiz` | % |
+| **`css`** | `css.CR01.acilim` | mm |
+| **`basma`** | `basma.debi` · `.basinc` | L/s · bar |
+| **`uretim`** | `uretim.vardiya.ton` | t |
 | `qapi` | `qapi.QAPI_1.durum` | `acik` \| `bagli` |
 | `tenzim` | `tenzim.T1.acilim` | % (0–100) |
 | `qaz` | `qaz.ch4.ARIN_1` | % — **tavan sensoru** (təbəqələşmə daxil) |
@@ -125,7 +154,9 @@ brauzer köhnə `js/css` oxumasın deyə.
 
 - `t` — ssenari başlayandan keçən saniyə
 - `deyerler` — **yalnız dəyişənlər** göndərilir (ilk `tick`-də hamısı)
-- `alarmlar` — **tam siyahı** (aktiv + təsdiqlənməmiş). Hər dəfə tam göndərilir
+- `alarmlar` — **tam siyahı** (aktiv + təsdiqlənməmiş). Hər alarm `alan` sahəsi
+  daşıyır (`hava` `gaz` `cevher` `su`) — naviqasiya rozetləri bundan sayılır
+- `engel` — son rədd edilən əmrin səbəbi (interlock). Arayüz alarm bandında göstərir
 
 ### 3.3 `kocluk` — AI Koç izahı
 
@@ -197,6 +228,10 @@ brauzer köhnə `js/css` oxumasın deyə.
 | Hədəf növü | Mümkün `emr` |
 |---|---|
 | `fan.*` | `basla`, `dayandir` |
+| `motor.*` | `basla`, `dayandir`, **`sifirla`** (arıza reset) |
+| `vana.*` | `ac`, `bagla`, `ayarla` (+`deyer` 0–100) |
+| `vsd.FE01` | `ayarla` (+`deyer` 0–100 %) |
+| `css.CR01` | `ayarla` (+`deyer` 80–200 mm) |
 | `qapi.*` | `ac`, `bagla` |
 | `tenzim.*` | `ayarla` (+ `deyer`: 0–100) |
 | `nasos.*` | `basla`, `dayandir` |

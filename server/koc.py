@@ -53,10 +53,14 @@ class Koc:
         d = sim.deyerler()
         onem = {"kritik": 0, "uyari": 1, "bilgi": 2}
         bulgular = [b for b in (self._fan_durdu(sim, d),
+                                self._motor_trip(sim, d),
                                 self._kisa_devre(sim, d),
                                 self._regulator(sim, d),
                                 self._gaz_emisyonu(sim, d),
-                                self._sump(sim, d)) if b]
+                                self._kirici_yuk(sim, d),
+                                self._bunker(sim, d),
+                                self._sump(sim, d),
+                                self._interlock(sim, d)) if b]
         uygun = [b for b in bulgular
                  if sim.t - self.son_soylenen.get(b["baslik"], -9999) >= self.soguma_sn]
         if not uygun:
@@ -182,22 +186,96 @@ class Koc:
         return None
 
     def _sump(self, sim, d) -> dict | None:
+        pr = sim.proses
         sv = d.get("sump.S1.seviyye", 0)
-        if sv < 70:
+        if sv < 68:
             return None
-        acik = sum(1 for v in sim.nasos.values() if v)
-        net = sim.su_girisi - acik * sim.nasos_debi
+        acik = sum(1 for m in (pr.p1, pr.p2) if m.calisiyor)
+        from proses import POMPA_DEBI
+        net = pr.su_girisi - acik * POMPA_DEBI
         if net <= 0:
             return None
-        kalan = (sim.sump_max - sim.sump_hacim) / net
+        kalan = (pr.sump_max - pr.sump_m3) / net
         return {
-            "seviyye": "kritik" if sv > 90 else "uyari",
+            "seviyye": "kritik" if sv > 88 else "uyari",
             "baslik": "Sump doluyor — pompa kapasitesi yetersiz",
             "izah": (
-                f"Su girisi {sim.su_girisi * 1000:.0f} L/s, calisan pompa kapasitesi "
-                f"{acik * sim.nasos_debi * 1000:.0f} L/s. Net {net * 1000:.0f} L/s "
-                f"birikim var; seviye %{sv:.0f}. Bu hizla yaklasik "
-                f"{kalan / 60:.0f} dakika sonra tasar."
+                f"Ocaktan gelen su {pr.su_girisi * 1000:.0f} L/s, calisan "
+                f"{acik} pompanin kapasitesi {acik * POMPA_DEBI * 1000:.0f} L/s. "
+                f"Net {net * 1000:.0f} L/s birikim var; seviye %{sv:.0f}. "
+                f"Bu hizla yaklasik {kalan / 60:.0f} dakika sonra tasar."
             ),
-            "tovsiye": "Ikinci pompayi (P2) devreye alin.",
+            "tovsiye": ("Ikinci pompayi (P2) devreye alin. "
+                        "HV01 vanasinin acik oldugunu da dogrulayin."),
+        }
+
+    def _motor_trip(self, sim, d) -> dict | None:
+        """Bir motor trip ettiyse sebebini ve sonucunu acikla."""
+        for m in sim.proses.motorlar.values():
+            if not m.trip:
+                continue
+            etki = {
+                "CR01": "Kirici durdu; besleyici de interlock ile durdu. Hat beslenmiyor.",
+                "CV01": "Bant durdu; kirici bosaltamaz, ust hat interlock ile duracak.",
+                "CV02": "Bant durdu; surge bunkeri bosalmiyor, dolarsa ust hat durur.",
+                "FE01": "Besleyici durdu; kiriciya malzeme gitmiyor, uretim durdu.",
+                "P1": "Pompa durdu; sump seviyesi yukselmeye baslayacak.",
+                "P2": "Yedek pompa durdu; tek pompa giris debisini karsilamayabilir.",
+            }.get(m.id, "")
+            return {
+                "seviyye": "kritik",
+                "baslik": f"{m.id} ARIZA — {m.trip_sebep}",
+                "izah": (f"{m.ad} ({m.id}) trip etti. Sebep: {m.trip_sebep}. "
+                         f"Son akim {m.akim:.0f} A, trip esigi {m.trip_a:.0f} A. {etki} "
+                         "Trip eden motor kendiliginden calismaz — once RESET gerekir."),
+                "tovsiye": (f"{m.id} faceplate'ini acin, ARIZA RESET yapin, "
+                            "sonra baslatma sirasina uyarak yeniden devreye alin."),
+            }
+        return None
+
+    def _kirici_yuk(self, sim, d) -> dict | None:
+        cr = sim.proses.cr01
+        if not cr.calisiyor:
+            return None
+        yuk = d.get("motor.CR01.yuk", 0)
+        if yuk < 118:
+            return None
+        return {
+            "seviyye": "kritik" if yuk > 145 else "uyari",
+            "baslik": "Kirici asiri yukleniyor",
+            "izah": (f"CR01 motor akimi {cr.akim:.0f} A — nominalin %{yuk:.0f}'i. "
+                     f"Besleyici hizi %{sim.proses.fe01_hiz:.0f}, CSS "
+                     f"{sim.proses.cr01_css:.0f} mm. Bu yukte devam ederse "
+                     f"{cr.trip_a:.0f} A trip esigine ulasir ve kirici durur."),
+            "tovsiye": ("FE01 besleyici hizini dusurun veya CSS aciklıgını artirin. "
+                        "Ikisi de kirma yukunu azaltir."),
+        }
+
+    def _bunker(self, sim, d) -> dict | None:
+        bn = sim.proses.bn02
+        if bn.seviye < 80:
+            return None
+        return {
+            "seviyye": "kritik" if bn.seviye >= bn.yuksek else "uyari",
+            "baslik": "BN02 surge bunkeri doluyor",
+            "izah": (f"Surge bunkeri %{bn.seviye:.0f} dolu. %{bn.yuksek:.0f} seviyesinde "
+                     "CV01 interlock ile durur — cunku bosaltacak yer kalmaz. "
+                     f"CV02 bandi {d.get('bant.CV02.yuk', 0):.0f} t/h cekiyor, "
+                     f"CV01 {d.get('bant.CV01.yuk', 0):.0f} t/h besliyor."),
+            "tovsiye": ("CV02'nin calistigini dogrulayin veya FE01 besleyici hizini "
+                        "dusurerek giris debisini azaltin."),
+        }
+
+    def _interlock(self, sim, d) -> dict | None:
+        """Operator interlock nedeniyle reddedilmis bir emir verdiyse acikla."""
+        if not sim.son_engel or "INTERLOCK" not in sim.son_engel.upper():
+            return None
+        return {
+            "seviyye": "uyari",
+            "baslik": "Interlock komutu reddetti",
+            "izah": (f"{sim.son_engel} "
+                     "Interlock gorsel bir uyari degil, koruma mantigidir: "
+                     "yanlis sirada baslatilan hatta malzeme yigilir ve bant kopar."),
+            "tovsiye": ("Baslatma sirasi akistan GERIYE dogrudur: "
+                        "CV02 → CV01 → CR01 → FE01."),
         }

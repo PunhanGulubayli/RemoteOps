@@ -1,57 +1,15 @@
-/* RemoteOps — proses seması teması
+/* RemoteOps — havalandırma şeması stilleri
  *
- * İki tema:
- *   .tema-koyu  — klasik kontrol odası görünümü (karanlık oda, projeksiyon)
- *   .tema-acik  — ANSI/ISA-101 High Performance HMI (aydınlık oda)
- *
- * Kural (ISA-18.2): doygun kırmızı / turuncu / sarı / macenta YALNIZCA alarm.
- * Hava servisi renkleri bilerek SOLGUNDUR ki alarmla karışmasın.
+ * Tema değişkenleri hmi.css'ten gelir. Burada yalnızca #sema-svg kuralları var.
+ * (sema_ciz.js tarafından üretilen otomatik şebeke şeması için.)
  */
-
-:root {
-  --p1: #FF2B2B;   /* kritik  */
-  --p2: #FF9800;   /* yüksek  */
-  --p3: #FFE000;   /* düşük   */
-  --p4: #FF35C8;   /* sensör  */
-}
-
-/* ------------------------------------------------------------ KOYU TEMA */
-.tema-koyu {
-  --zemin:      #0B1B2B;
-  --zemin-2:    #102A3E;
-  --panel:      #12293D;
-  --panel-2:    #0E2032;
-  --cizgi:      #2C4C68;
-  --kenar:      #3E6B8E;
-  --yazi:       #DCE8F2;
-  --yazi-dim:   #86A2BC;
-  --ek-dolgu:   #1C3A52;
-  --ek-kenar:   #6E96B8;
-  --ek-ic:      #24455F;
-  --temiz:      #3E8E7E;   /* temiz hava  — solgun teal */
-  --donus:      #A07A46;   /* dönüş havası — solgun oker */
-  --arin:       #7E6FA8;   /* arın        — solgun mor  */
-  --karma:      #5B7A93;
-  --kutu-fon:   #0A1725;
-}
-
-/* ------------------------------------------------------------ ACIK TEMA */
-.tema-acik {
-  --zemin:      #C8C8C8;
-  --panel:      #D6D6D6;
-  --panel-2:    #BFBFBF;
-  --cizgi:      #8C8C8C;
-  --kenar:      #404040;
-  --yazi:       #1A1A1A;
-  --yazi-dim:   #565656;
-  --ek-dolgu:   #FFFFFF;
-  --ek-kenar:   #404040;
-  --ek-ic:      #E4E4E4;
-  --temiz:      #6E9C93;
-  --donus:      #A88F63;
-  --arin:       #8C82AC;
-  --karma:      #909090;
-  --kutu-fon:   #FFFFFF;
+#sema-svg {
+  --yazi-dim: var(--dim);
+  --panel-2: var(--panel2);
+  --ek-dolgu: var(--eq-bos);
+  --ek-kenar: var(--eq-kenar);
+  --ek-ic: var(--eq-ic);
+  --kutu-fon: var(--kutu);
 }
 
 /* ------------------------------------------------------------ SVG */

@@ -1,0 +1,46 @@
+id: S05
+ad: "Su girisi artti - sump tasma riski"
+aciklama: >
+  Ocakta damar suyu artti. Tek pompa giris debisini karsilamiyor ve sump
+  seviyesi yukseliyor. Sump tasarsa alt katlar su altinda kalir ve uretim durur.
+  Ikinci pompayi devreye alin. Vana kapali ise pompa basamaz - once onu kontrol edin.
+sure_sn: 360
+ekran: su
+
+olaylar:
+  - t: 30
+    tip: ariza
+    ad: "Damar suyu girisi artti"
+    etki: { su_girisi: 0.115 }
+  - t: 150
+    tip: ariza
+    ad: "Su girisi daha da artti"
+    etki: { su_girisi: 0.145 }
+
+gorevler:
+  - ad: "Sump seviyesini kontrol altina al"
+    aciklama: >
+      Sump seviyesi yukseliyor. Giris debisini karsilayacak pompa kapasitesini
+      devreye alin. Her pompa 45 L/s basar.
+    ekran: su
+    ekran_ad: "SU ATMA"
+    adimlar:
+      - metin: "HV01 vanasinin ACIK oldugunu dogrulayin"
+        hedef: "HV01"
+        ipucu: "Vana kapaliysa tanktan sumpa su gecmez ama pompa da basamaz."
+        tamam: { etiket: "vana.HV01.durum", deger: "acik" }
+      - metin: "P2 pompasini devreye alin"
+        hedef: "P2"
+        ipucu: "Tek pompa 45 L/s basar; giris bunun ustundeyse ikinci pompa sart."
+        tamam: { etiket: "motor.P2.durum", deger: "isliyir" }
+      - metin: "Sump seviyesinin dusmeye basladigini dogrulayin (<%70)"
+        ipucu: "Iki pompa 90 L/s basar. Seviye hemen dusmez - trend ekranindan izleyin."
+        tamam: { etiket: "sump.S1.seviyye", alt: 70 }
+
+optimal:
+  - t_hedef: 90
+    ad: "P2 pompasi devreye alindi"
+    kontrol: { hedef: "motor.P2", emr: "basla" }
+
+basari:
+  - { etiket: "sump.S1.seviyye", kosul: "alt", deger: 70.0 }

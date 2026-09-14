@@ -1,8 +1,11 @@
 """
-RemoteOps - Simulasyon cekirdegi.
+RemoteOps — Simulasyon cekirdegi.
 
-Ventilasyon (network.py) uzerine gaz, su ve konveyor modellerini ekler,
-alarmlari uretir ve contract.md'ye uygun 'tick' mesaji cikarir.
+Uc proses adasini birlestirir ve contract.md'ye uygun 'tick' uretir:
+
+  1) HAVALANDIRMA  (network.py)  — Atkinson + Hardy-Cross/Newton-Raphson
+  2) GAZ           (bu dosya)    — advection + difuzyon + kaldirma kuvveti
+  3) CEVHER + SU   (proses.py)   — bunker/besleyici/kirici/bant/pompa, interlock
 
 Gaz modeli (CH4):
     Kararli hal karisim:   C_ss = kaynak / (Q + kaynak) * 100      [%]
@@ -20,10 +23,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from network import Sebeke
+from proses import ProsesHatti
 
 VARSAYILAN_SEBEKE = Path(__file__).resolve().parent.parent / "data" / "sebeke_ocak1.json"
 
-V_KRITIK = 2.0      # m/s - altinda tabakalasma baslar
+V_KRITIK = 2.0      # m/s — altinda tabakalasma baslar
 KL = 1.2            # tabakalasma siddeti
 O2_TEMIZ = 20.9     # %
 
@@ -36,7 +40,8 @@ class AlarmTanimi:
     mesaj: str
     yon: str                 # "ust" (deger >= esik) | "alt" (deger <= esik)
     esik: float
-    histerezis: float = 0.0  # geri donus payi - titremeyi (chattering) onler
+    histerezis: float = 0.0  # geri donus payi — titremeyi (chattering) onler
+    alan: str = "genel"      # hangi ekranda gosterilecek
 
 
 @dataclass
@@ -46,6 +51,7 @@ class AktifAlarm:
     prioritet: int
     mesaj: str
     vaxt: int
+    alan: str = "genel"
     tesdiqlendi: bool = False
     aktiv: bool = True
 
@@ -53,34 +59,21 @@ class AktifAlarm:
 @dataclass
 class Simulasyon:
     sebeke: Sebeke = field(default=None)
+    proses: ProsesHatti = field(default_factory=ProsesHatti)
     t: int = 0
 
-    # gaz durumu:  arin -> CH4 %  (ortalama)
+    # gaz durumu: arin -> CH4 % (ortalama)
     ch4: dict[str, float] = field(default_factory=dict)
-    gaz_carpani: dict[str, float] = field(default_factory=dict)   # senaryo: emisyon artisi
-
-    # su atma
-    sump_hacim: float = 30.0          # m3
-    sump_max: float = 60.0            # m3
-    su_girisi: float = 0.075          # m3/s (P1 tek basina yetmez)
-    nasos: dict[str, bool] = field(default_factory=lambda: {"P1": True, "P2": False})
-    nasos_debi: float = 0.045         # m3/s (her nasos)
-
-    # konveyor
-    konveyor_calisiyor: bool = True
-    konveyor_yuk: float = 62.0        # %
-    konveyor_hedef_yuk: float = 62.0
-    konveyor_ariza: bool = False
+    gaz_carpani: dict[str, float] = field(default_factory=dict)
 
     # alarmlar
     tanimlar: list[AlarmTanimi] = field(default_factory=list)
     aktif: dict[str, AktifAlarm] = field(default_factory=dict)
     _sayac: int = 0
-    _onceki: dict[str, float] = field(default_factory=dict)
     olaylar: list[dict] = field(default_factory=list)
+    son_engel: str = ""              # son interlock reddi (arayuz gosterir)
 
     # ---------------------------------------------------------------- kurulum
-
     @classmethod
     def olustur(cls, sebeke_yolu: str | Path = VARSAYILAN_SEBEKE) -> "Simulasyon":
         s = cls(sebeke=Sebeke.yukle(sebeke_yolu))
@@ -95,30 +88,54 @@ class Simulasyon:
         e = self.sebeke.esikler
         ch4 = e.get("ch4", {"p3": 1.0, "p2": 1.5, "p1": 2.0})
         t: list[AlarmTanimi] = []
+
+        # --- havalandirma / gaz ---
         for arin in self.ch4:
             no = arin.split("_")[1]
             t += [
                 AlarmTanimi(f"CH4_P1_{arin}", f"qaz.ch4.{arin}", 1,
-                            f"CH4 KRITIK - ARIN {no} (>%{ch4['p1']})", "ust", ch4["p1"], 0.1),
+                            f"CH4 KRITIK — ARIN {no} (>%{ch4['p1']})", "ust", ch4["p1"], 0.1, "gaz"),
                 AlarmTanimi(f"CH4_P2_{arin}", f"qaz.ch4.{arin}", 2,
-                            f"CH4 yuksek - ARIN {no} (>%{ch4['p2']})", "ust", ch4["p2"], 0.1),
+                            f"CH4 yuksek — ARIN {no} (>%{ch4['p2']})", "ust", ch4["p2"], 0.1, "gaz"),
                 AlarmTanimi(f"CH4_P3_{arin}", f"qaz.ch4.{arin}", 3,
-                            f"CH4 esik ustu - ARIN {no} (>%{ch4['p3']})", "ust", ch4["p3"], 0.1),
+                            f"CH4 esik ustu — ARIN {no} (>%{ch4['p3']})", "ust", ch4["p3"], 0.1, "gaz"),
                 AlarmTanimi(f"HIZ_P2_{arin}", f"arin.{arin}.hiz", 2,
-                            f"Hava hizi dusuk - ARIN {no}", "alt", 1.5, 0.2),
+                            f"Hava hizi dusuk — ARIN {no}", "alt", 1.5, 0.2, "hava"),
             ]
         t += [
-            AlarmTanimi("FAN_P1", "fan.ana_1.durum", 1, "ANA FAN DURDU", "alt", 0.5),
-            AlarmTanimi("DEBI_P2", "fan.ana_1.debi", 2, "Ocak debisi dusuk (<90 m3/s)", "alt", 90.0, 3.0),
-            AlarmTanimi("SUMP_P3", "sump.S1.seviyye", 3, "Sump seviyesi yuksek (>%75)", "ust", 75.0, 3.0),
-            AlarmTanimi("SUMP_P1", "sump.S1.seviyye", 1, "SUMP TASMA RISKI (>%92)", "ust", 92.0, 3.0),
-            AlarmTanimi("KONV_P2", "konveyer.K1.akim", 2, "Konveyor akimi yuksek", "ust", 210.0, 10.0),
-            AlarmTanimi("KONV_P1", "konveyer.K1.durum", 1, "KONVEYOR ARIZA - durdu", "alt", 0.5),
+            AlarmTanimi("FAN_P1", "fan.ana_1.durum", 1, "ANA FAN DURDU", "alt", 0.5, 0, "hava"),
+            AlarmTanimi("DEBI_P2", "fan.ana_1.debi", 2,
+                        "Ocak debisi dusuk (<90 m3/s)", "alt", 90.0, 3.0, "hava"),
+        ]
+
+        # --- cevher hatti ---
+        for mid, ad in (("CR01", "KIRICI"), ("CV01", "BANT 01"),
+                        ("CV02", "BANT 02"), ("FE01", "BESLEYICI")):
+            t.append(AlarmTanimi(f"TRIP_{mid}", f"motor.{mid}.ariza", 1,
+                                 f"{ad} ARIZA — trip", "ust", 0.5, 0, "cevher"))
+        t += [
+            AlarmTanimi("CR01_YUK", "motor.CR01.yuk", 2,
+                        "Kirici motoru yuksek yukte (>%125)", "ust", 125.0, 8.0, "cevher"),
+            AlarmTanimi("BN02_HI", "bunker.BN02.seviyye", 2,
+                        "BN02 surge bunkeri yuksek (>%85)", "ust", 85.0, 4.0, "cevher"),
+            AlarmTanimi("BN01_LO", "bunker.BN01.seviyye", 3,
+                        "BN01 ROM bunkeri dusuk (<%12)", "alt", 12.0, 4.0, "cevher"),
+        ]
+
+        # --- su atma ---
+        t += [
+            AlarmTanimi("SUMP_P3", "sump.S1.seviyye", 3,
+                        "Sump seviyesi yuksek (>%75)", "ust", 75.0, 3.0, "su"),
+            AlarmTanimi("SUMP_P1", "sump.S1.seviyye", 1,
+                        "SUMP TASMA RISKI (>%92)", "ust", 92.0, 3.0, "su"),
+            AlarmTanimi("TK01_HI", "tank.TK01.seviyye", 2,
+                        "TK01 cokeltme tanki yuksek (>%80)", "ust", 80.0, 4.0, "su"),
+            AlarmTanimi("TRIP_P1", "motor.P1.ariza", 2, "POMPA P1 ARIZA", "ust", 0.5, 0, "su"),
+            AlarmTanimi("TRIP_P2", "motor.P2.ariza", 2, "POMPA P2 ARIZA", "ust", 0.5, 0, "su"),
         ]
         return t
 
-    # ---------------------------------------------------------------- fizik
-
+    # ---------------------------------------------------------------- gaz fizigi
     def _ch4_kararli(self, arin: str) -> float:
         for g in self.sebeke.gaz_kaynaklari:
             if g["arin"] == arin:
@@ -144,75 +161,53 @@ class Simulasyon:
         for arin in self.ch4:
             k = self._arin_kolu(arin)
             q = max(abs(k.Q), 0.05) if k else 0.05
-            hacim = (k.alan * 150.0) if k else 1000.0      # arin hava hacmi ~ A*L
-            tau = max(hacim / q, 2.0)                       # advection zaman sabiti
+            hacim = (k.alan * 150.0) if k else 1000.0
+            tau = max(hacim / q, 2.0)
             hedef = self._ch4_kararli(arin)
             self.ch4[arin] += (hedef - self.ch4[arin]) * (dt / tau)
 
-    def _su_adim(self, dt: float) -> None:
-        pompalanan = sum(self.nasos_debi for a in self.nasos.values() if a)
-        self.sump_hacim += (self.su_girisi - pompalanan) * dt
-        self.sump_hacim = max(0.0, min(self.sump_max * 1.05, self.sump_hacim))
-
-    def _konveyor_adim(self, dt: float) -> None:
-        if not self.konveyor_calisiyor:
-            self.konveyor_yuk += (0.0 - self.konveyor_yuk) * (dt / 8.0)
-            return
-        self.konveyor_yuk += (self.konveyor_hedef_yuk - self.konveyor_yuk) * (dt / 12.0)
-        if self.konveyor_akim() > 250.0:                    # termik koruma
-            self.konveyor_calisiyor = False
-            self.konveyor_ariza = True
-
-    def konveyor_akim(self) -> float:
-        if not self.konveyor_calisiyor:
-            return 0.0
-        return 42.0 + 1.9 * self.konveyor_yuk
-
     # ---------------------------------------------------------------- alarm
-
-    def _deger(self, etiket: str, d: dict | None = None) -> float:
-        d = d if d is not None else self.deyerler()
+    def _deger(self, etiket: str, d: dict) -> float:
         v = d.get(etiket)
         if isinstance(v, bool):
             return 1.0 if v else 0.0
         if isinstance(v, str):
-            return 0.0 if v in ("dayandi", "ariza") else 1.0
+            return 0.0 if v in ("dayandi", "ariza", "bagli") else 1.0
         return float(v) if v is not None else 0.0
 
-    def _alarm_adim(self) -> None:
-        anlik = self.deyerler()          # tick basina TEK kez hesapla
+    def _alarm_adim(self, d: dict) -> None:
         for td in self.tanimlar:
-            v = self._deger(td.etiket, anlik)
+            v = self._deger(td.etiket, d)
             var = td.id in self.aktif and self.aktif[td.id].aktiv
             if td.yon == "ust":
-                tetik = v >= td.esik
-                birak = v < td.esik - td.histerezis
+                tetik, birak = v >= td.esik, v < td.esik - td.histerezis
             else:
-                tetik = v <= td.esik
-                birak = v > td.esik + td.histerezis
+                tetik, birak = v <= td.esik, v > td.esik + td.histerezis
 
             if tetik and not var:
                 self._sayac += 1
                 self.aktif[td.id] = AktifAlarm(
                     id=f"A{self._sayac:03d}", etiket=td.etiket, prioritet=td.prioritet,
-                    mesaj=td.mesaj, vaxt=self.t)
+                    mesaj=td.mesaj, vaxt=self.t, alan=td.alan)
                 self.olaylar.append({"t": self.t, "tip": "alarm",
                                      "ad": td.mesaj, "prioritet": td.prioritet})
             elif birak and var:
                 self.aktif[td.id].aktiv = False
 
     # ---------------------------------------------------------------- adim
-
     def adim(self, dt: float = 1.0) -> None:
         self.sebeke.coz()
         self._gaz_adim(dt)
-        self._su_adim(dt)
-        self._konveyor_adim(dt)
-        self._alarm_adim()
+        self.proses.adim(dt)
+        if self.proses._engel:
+            self.son_engel = self.proses._engel[-1]
+            for e in self.proses._engel:
+                self.olaylar.append({"t": self.t, "tip": "interlock", "ad": e})
+            self.proses._engel.clear()
+        self._alarm_adim(self.deyerler())
         self.t += int(dt)
 
     # ---------------------------------------------------------------- cikti
-
     def deyerler(self) -> dict:
         s = self.sebeke
         f = s.fan_bilgisi()
@@ -222,25 +217,16 @@ class Simulasyon:
             "fan.ana_1.rpm": round(980 * (1.0 if f["calisiyor"] else 0.0)),
             "fan.ana_1.guc": round(f["guc_kw"]),
             "fan.ana_1.durum": "isliyir" if f["calisiyor"] else "dayandi",
-            "sump.S1.seviyye": round(self.sump_hacim / self.sump_max * 100, 1),
-            "nasos.P1.durum": "isliyir" if self.nasos["P1"] else "dayandi",
-            "nasos.P2.durum": "isliyir" if self.nasos["P2"] else "dayandi",
-            "nasos.P1.akim": round(88.0 if self.nasos["P1"] else 0.0, 1),
-            "nasos.P2.akim": round(88.0 if self.nasos["P2"] else 0.0, 1),
-            "konveyer.K1.yuk": round(self.konveyor_yuk, 1),
-            "konveyer.K1.akim": round(self.konveyor_akim(), 1),
-            "konveyer.K1.durum": ("ariza" if self.konveyor_ariza
-                                  else "isliyir" if self.konveyor_calisiyor else "dayandi"),
         }
         for kid, k in s.kollar.items():
             d[f"qol.{kid}.debi"] = round(abs(k.Q), 2)
             d[f"qol.{kid}.hiz"] = round(k.hiz, 2)
-            d[f"qol.{kid}.yon"] = 1 if k.Q >= 0 else -1   # akis oku yonu
+            d[f"qol.{kid}.yon"] = 1 if k.Q >= 0 else -1
         for arin, c in self.ch4.items():
             tavan = c * self._tabaka_carpani(arin)
             k = self._arin_kolu(arin)
-            d[f"qaz.ch4.{arin}"] = round(tavan, 2)            # tavan sensoru okur
-            d[f"qaz.ch4_ort.{arin}"] = round(c, 2)            # ortalama (referans)
+            d[f"qaz.ch4.{arin}"] = round(tavan, 2)
+            d[f"qaz.ch4_ort.{arin}"] = round(c, 2)
             d[f"qaz.o2.{arin}"] = round(O2_TEMIZ * (1 - tavan / 100.0), 1)
             d[f"arin.{arin}.debi"] = round(abs(k.Q), 1) if k else 0.0
             d[f"arin.{arin}.hiz"] = round(k.hiz, 2) if k else 0.0
@@ -253,16 +239,17 @@ class Simulasyon:
                 lo, hi = k.tenzim_min_R, k.tenzim_max_R
                 a = math.log(max(k.R, lo) / hi) / math.log(lo / hi)
                 d[f"tenzim.{k.tenzim_id}.acilim"] = round(max(0, min(100, a * 100)))
+
+        d.update(self.proses.deyerler())
         return d
 
     def tick(self) -> dict:
         return {
-            "tip": "tick",
-            "t": self.t,
-            "deyerler": self.deyerler(),
+            "tip": "tick", "t": self.t, "deyerler": self.deyerler(),
+            "engel": self.son_engel,
             "alarmlar": [
                 {"id": a.id, "etiket": a.etiket, "prioritet": a.prioritet,
-                 "mesaj": a.mesaj, "vaxt": a.vaxt,
+                 "mesaj": a.mesaj, "vaxt": a.vaxt, "alan": a.alan,
                  "tesdiqlendi": a.tesdiqlendi, "aktiv": a.aktiv}
                 for a in sorted(self.aktif.values(), key=lambda x: (x.prioritet, x.vaxt))
                 if a.aktiv or not a.tesdiqlendi
@@ -270,73 +257,77 @@ class Simulasyon:
         }
 
     def init_mesaji(self, senaryo: dict | None = None) -> dict:
-        e = self.sebeke.esikler
-        ch4 = e.get("ch4", {})
-        etiketler: dict[str, dict] = {}
+        ch4 = self.sebeke.esikler.get("ch4", {})
+        et: dict[str, dict] = {}
         for arin in self.ch4:
-            etiketler[f"qaz.ch4.{arin}"] = {
-                "vahid": "%", "min": 0, "max": 5, "normal": [0, ch4.get("p3", 1.0)],
-                "p3": ch4.get("p3"), "p2": ch4.get("p2"), "p1": ch4.get("p1")}
-            etiketler[f"arin.{arin}.debi"] = {
-                "vahid": "m3/s", "min": 0, "max": 60, "normal": [25, 50], "p2": 20}
-            etiketler[f"arin.{arin}.hiz"] = {
-                "vahid": "m/s", "min": 0, "max": 8, "normal": [1.5, 6.0], "p2": 1.5}
-        etiketler.update({
+            et[f"qaz.ch4.{arin}"] = {"vahid": "%", "min": 0, "max": 5,
+                                     "normal": [0, ch4.get("p3", 1.0)],
+                                     "p3": ch4.get("p3"), "p2": ch4.get("p2"), "p1": ch4.get("p1")}
+            et[f"arin.{arin}.debi"] = {"vahid": "m3/s", "min": 0, "max": 60,
+                                       "normal": [25, 50], "p2": 20}
+            et[f"arin.{arin}.hiz"] = {"vahid": "m/s", "min": 0, "max": 8,
+                                      "normal": [1.5, 6.0], "p2": 1.5}
+        et.update({
             "fan.ana_1.debi":   {"vahid": "m3/s", "min": 0, "max": 180, "normal": [100, 140], "p2": 90},
             "fan.ana_1.basinc": {"vahid": "Pa", "min": 0, "max": 3200, "normal": [1500, 2400]},
             "fan.ana_1.guc":    {"vahid": "kW", "min": 0, "max": 500, "normal": [200, 350]},
+            "motor.CR01.akim":  {"vahid": "A", "min": 0, "max": 560, "normal": [180, 400], "p2": 420},
+            "motor.CV01.akim":  {"vahid": "A", "min": 0, "max": 180, "normal": [45, 130], "p2": 150},
+            "motor.CV02.akim":  {"vahid": "A", "min": 0, "max": 180, "normal": [45, 130], "p2": 150},
+            "motor.FE01.akim":  {"vahid": "A", "min": 0, "max": 100, "normal": [20, 70]},
+            "motor.P1.akim":    {"vahid": "A", "min": 0, "max": 140, "normal": [70, 100]},
+            "motor.P2.akim":    {"vahid": "A", "min": 0, "max": 140, "normal": [70, 100]},
+            "bunker.BN01.seviyye": {"vahid": "%", "min": 0, "max": 100, "normal": [20, 85], "p3": 12},
+            "bunker.BN02.seviyye": {"vahid": "%", "min": 0, "max": 100, "normal": [15, 80], "p2": 85},
+            "tank.TK01.seviyye": {"vahid": "%", "min": 0, "max": 100, "normal": [20, 70], "p2": 80},
             "sump.S1.seviyye":  {"vahid": "%", "min": 0, "max": 100, "normal": [20, 70],
                                  "p3": 75, "p1": 92},
-            "konveyer.K1.yuk":  {"vahid": "%", "min": 0, "max": 120, "normal": [30, 85]},
-            "konveyer.K1.akim": {"vahid": "A", "min": 0, "max": 280, "normal": [80, 200],
-                                 "p2": 210},
+            "bant.CV01.yuk":    {"vahid": "t/h", "min": 0, "max": 450, "normal": [150, 380]},
+            "bant.CV02.yuk":    {"vahid": "t/h", "min": 0, "max": 450, "normal": [150, 380]},
+            "basma.debi":       {"vahid": "L/s", "min": 0, "max": 120, "normal": [40, 95]},
+            "basma.basinc":     {"vahid": "bar", "min": 0, "max": 32, "normal": [15, 26]},
+            "uretim.vardiya.ton": {"vahid": "t", "min": 0, "max": 3000, "normal": [0, 3000]},
         })
         return {"tip": "init", "sema": "ocak1",
                 "senaryo": senaryo or {"id": "S00", "ad": "Normal isletme", "sure_sn": 0},
-                "etiketler": etiketler}
+                "etiketler": et}
 
     # ---------------------------------------------------------------- komut
-
     def emr(self, hedef: str, emr: str, deyer: float | None = None) -> dict:
         tip, _, ad = hedef.partition(".")
-        ok = False
+        ok, sebep = False, ""
+
         if tip == "qapi":
             ok = self.sebeke.kapi_ayarla(ad, emr == "ac")
         elif tip == "tenzim" and emr == "ayarla" and deyer is not None:
             ok = self.sebeke.tenzim_ayarla(ad, float(deyer))
-        elif tip == "fan":
-            if emr in ("basla", "dayandir"):
-                ok = self.sebeke.fan_ayarla(ad, emr == "basla")
-        elif tip == "nasos" and ad in self.nasos:
-            self.nasos[ad] = (emr == "basla"); ok = True
-        elif tip == "konveyer":
-            if emr == "basla":
-                self.konveyor_calisiyor, self.konveyor_ariza = True, False; ok = True
-            elif emr == "dayandir":
-                self.konveyor_calisiyor = False; ok = True
+        elif tip == "fan" and emr in ("basla", "dayandir"):
+            ok = self.sebeke.fan_ayarla(ad, emr == "basla")
+        else:
+            ok, sebep = self.proses.emr(hedef, emr, deyer)
 
         if ok:
             self.sebeke.coz()
+            self.son_engel = ""
             self.olaylar.append({"t": self.t, "tip": "emr", "ad": f"{hedef} -> {emr}"})
             return {"tip": "onay", "hedef": hedef, "emr": emr}
-        return {"tip": "xeta", "kod": "GECERSIZ_EMR",
-                "mesaj": f"{hedef} / {emr} uygulanamadi"}
+
+        self.son_engel = sebep or f"{hedef} / {emr} uygulanamadi"
+        return {"tip": "xeta", "kod": "GECERSIZ_EMR", "hedef": hedef,
+                "mesaj": self.son_engel}
 
     def ack(self, alarm_id: str) -> None:
         for a in self.aktif.values():
-            if alarm_id == "*" or a.id == alarm_id:
-                if not a.tesdiqlendi:
-                    a.tesdiqlendi = True
-                    self.olaylar.append({"t": self.t, "tip": "ack", "ad": f"{a.id} tesdiqlendi"})
+            if (alarm_id == "*" or a.id == alarm_id) and not a.tesdiqlendi:
+                a.tesdiqlendi = True
+                self.olaylar.append({"t": self.t, "tip": "ack", "ad": f"{a.id} tesdiqlendi"})
 
     def sifirla(self) -> None:
         self.sebeke.sifirla(); self.sebeke.coz()
+        self.proses.sifirla()
         self.t = 0
         self.aktif.clear(); self.olaylar.clear(); self._sayac = 0
-        self.sump_hacim = 30.0
-        self.nasos = {"P1": True, "P2": False}
-        self.konveyor_calisiyor, self.konveyor_ariza = True, False
-        self.konveyor_yuk = self.konveyor_hedef_yuk = 62.0
+        self.son_engel = ""
         for a in self.gaz_carpani:
             self.gaz_carpani[a] = 1.0
         for a in self.ch4:
@@ -345,25 +336,25 @@ class Simulasyon:
 
 if __name__ == "__main__":
     sim = Simulasyon.olustur()
-    print("t=0 baslangic:")
+    print("=== Baslangic ===")
     d = sim.tick()["deyerler"]
-    for e in ("fan.ana_1.debi", "fan.ana_1.basinc", "qaz.ch4.ARIN_1",
-              "qaz.ch4.ARIN_2", "arin.ARIN_2.hiz", "sump.S1.seviyye",
-              "konveyer.K1.akim", "qapi.QAPI_1.durum", "tenzim.T1.acilim"):
-        print(f"   {e:<24} = {d[e]}")
+    for e in ("fan.ana_1.debi", "qaz.ch4.ARIN_2", "bunker.BN01.seviyye",
+              "motor.CR01.durum", "sump.S1.seviyye", "vana.HV01.durum"):
+        print(f"   {e:<26} = {d[e]}")
 
-    print("\nt=60'ta QAPI_1 aciliyor (kisa devre)...")
-    for _ in range(60):
+    print("\n=== Interlock testi: once besleyiciyi baslatmayi dene ===")
+    print("  ", sim.emr("motor.FE01", "basla")["mesaj"])
+
+    print("\n=== Dogru baslatma sirasi (akistan geriye) ===")
+    for mid in ("CV02", "CV01", "CR01", "FE01"):
+        r = sim.emr(f"motor.{mid}", "basla")
+        print(f"   {mid}: {'OK' if r['tip'] == 'onay' else r['mesaj']}")
+
+    for _ in range(120):
         sim.adim()
-    sim.emr("qapi.QAPI_1", "ac")
-    for adim in range(180):
-        sim.adim()
-        if adim % 60 == 59:
-            tk = sim.tick()
-            d = tk["deyerler"]
-            print(f"   t={sim.t:>3}s  CH4_A2=%{d['qaz.ch4.ARIN_2']:<5} "
-                  f"hiz={d['arin.ARIN_2.hiz']:<5} fan={d['fan.ana_1.debi']:<6} "
-                  f"alarm={len(tk['alarmlar'])}")
-    print("\nAktif alarmlar:")
-    for a in sim.tick()["alarmlar"]:
-        print(f"   P{a['prioritet']}  {a['mesaj']}")
+    d = sim.tick()["deyerler"]
+    print(f"\n=== 120 sn sonra ===")
+    for e in ("motor.CR01.akim", "bant.CV01.yuk", "bunker.BN02.seviyye",
+              "uretim.vardiya.ton", "sump.S1.seviyye"):
+        print(f"   {e:<26} = {d[e]}")
+    print(f"   aktif alarm: {len(sim.tick()['alarmlar'])}")

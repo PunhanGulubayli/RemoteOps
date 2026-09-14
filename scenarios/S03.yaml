@@ -28,16 +28,40 @@ olaylar:
     ad: "Gaz cikisi kritik seviyeye ulasti"
     etki: { gaz_carpani: { ARIN_2: 2.9 } }
 
+ekran: gaz
+
+gorevler:
+  - ad: "Normallesmis sapmaya karar ver"
+    aciklama: >
+      CH4 surekli %1.5-2 arasinda geziniyor ve alarm tekrar tekrar caliyor.
+      Alarmi onaylamak MUDAHALE DEGILDIR. Seyreltmeyi artirin ve gerekirse
+      uretimi durdurun. Sistem NE ZAMAN durdurmaya karar verdiginizi olcer.
+    ekran: hava
+    ekran_ad: "HAVALANDIRMA"
+    adimlar:
+      - metin: "TENZIM 1 regulatorunu tam acarak seyreltme havasini artirin"
+        hedef: "T1"
+        ipucu: "Regulator acilinca o kol daha cok hava alir."
+        tamam: { etiket: "tenzim.T1.acilim", ust: 95 }
+      - metin: "Uretimi durdurun - konveyoru kapatin"
+        hedef: "CV01"
+        ipucu: "CH4 %2 uzerine ciktiginda uretim durdurulur ve personel tahliye edilir."
+        tamam: { etiket: "motor.CV01.durum", deger: "dayandi" }
+      - metin: "Ikinci pompayi devreye alin (damar suyu da artti)"
+        hedef: "P2"
+        ipucu: "Sump seviyesini su atma ekranindan izleyin."
+        tamam: { etiket: "motor.P2.durum", deger: "isliyir" }
+
 optimal:
   - t_hedef: 120
     ad: "TENZIM 1 acilarak ARIN 2'ye seyreltme havasi artirildi"
     kontrol: { hedef: "tenzim.T1", emr: "ayarla" }
   - t_hedef: 180
     ad: "Konveyor durduruldu - uretim kesildi"
-    kontrol: { hedef: "konveyer.K1", emr: "dayandir" }
+    kontrol: { hedef: "motor.CV01", emr: "dayandir" }
   - t_hedef: 240
     ad: "Ikinci pompa (P2) devreye alindi"
-    kontrol: { hedef: "nasos.P2", emr: "basla" }
+    kontrol: { hedef: "motor.P2", emr: "basla" }
 
 basari:
   - { etiket: "qaz.ch4.ARIN_2", kosul: "alt", deger: 1.5 }

@@ -34,6 +34,8 @@ class Senaryo:
     olaylar: list[dict] = field(default_factory=list)
     optimal: list[dict] = field(default_factory=list)
     basari: list[dict] = field(default_factory=list)
+    gorevler: list[dict] = field(default_factory=list)   # egitim adimlari
+    ekran: str = "genel"                                  # acilista gosterilecek ekran
 
     @classmethod
     def yukle(cls, sid: str) -> "Senaryo":
@@ -45,7 +47,10 @@ class Senaryo:
         out = []
         for f in sorted(SENARYO_DIZIN.glob("*.yaml")):
             y = yaml.safe_load(f.read_text(encoding="utf-8"))
-            out.append({"id": y["id"], "ad": y["ad"], "sure_sn": y.get("sure_sn", 300)})
+            out.append({"id": y["id"], "ad": y["ad"],
+                        "sure_sn": y.get("sure_sn", 300),
+                        "ekran": y.get("ekran", "genel"),
+                        "aciklama": (y.get("aciklama") or "").strip()})
         return out
 
 
@@ -84,9 +89,17 @@ class Oturum:
                 for kol, c in etki["kol_direnc"].items():
                     sim.sebeke.kol_direnc_carp(kol, float(c))
             if "su_girisi" in etki:
-                sim.su_girisi = float(etki["su_girisi"])
-            if "konveyor_yuk" in etki:
-                sim.konveyor_hedef_yuk = float(etki["konveyor_yuk"])
+                sim.proses.su_girisi = float(etki["su_girisi"])
+            if "fe01_hiz" in etki:
+                sim.proses.fe01_hiz = float(etki["fe01_hiz"])
+            if "cr_tikanma" in etki:
+                sim.proses.cr_tikanma = float(etki["cr_tikanma"])
+            if "cv01_kacik" in etki:
+                sim.proses.cv01_kacik = bool(etki["cv01_kacik"])
+            if "trip" in etki:
+                m = sim.proses.motorlar.get(etki["trip"])
+                if m:
+                    m.trip_et(etki.get("trip_sebep", "saha arizasi"))
             sim.sebeke.coz()
             self.olaylar.append({"t": sim.t, "tip": o.get("tip", "ariza"), "ad": o["ad"]})
 
