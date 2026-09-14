@@ -12,103 +12,127 @@
 (function () {
   const { Cizim } = window.HMI;
 
-  /* ============================================================ CEVHER HATTI */
+  /* ============================================================ CEVHER HATTI
+     Yerlesim kurali: malzeme SOLDAN SAGA akar, ekipman tek bir bantta dizilir,
+     her ekipmanin degerleri TAM ALTINDA duran kompakt kartta gosterilir.
+     Uzun kesik cizgiler yok — goz akisi takip edebilsin. */
   function cevherHatti() {
     const b = new Cizim();
-    const W = 1240, H = 700;
+    const W = 1280, H = 660;
+    const Y = 250;                     // ekipman bandi
+    const KY = 430;                    // kart bandi
 
-    b.not(24, 30, 'ALAN 30 — CEVHER HAZIRLAMA HATTI', 'et-baslik');
-    b.not(24, 50, 'ROM bunkeri → apron besleyici → çene kırıcı → bant → surge bunkeri → bant → skip',
-          'et-not');
+    b.not(26, 34, 'ALAN 30 — CEVHER HAZIRLAMA HATTI', 'et-baslik');
+    b.not(26, 54, 'Malzeme akışı:  soldan sağa', 'et-not');
 
-    // --- ROM bunkeri + besleyici ---
-    b.bunker(90, 96, 150, 128, 'BN01', 'ROM BUNKERİ', 'bunker.BN01.seviyye');
-    b.oluk(165, 258, 165, 288);
-    b.besleyici(178, 300, 'FE01', 'APRON BESLEYİCİ');
-    b.oluk(250, 318, 300, 352);
+    /* ---- akis omurgasi: kesintisiz turuncu bant ---- */
+    b.boru('M150,240 L150,300 L300,300 L300,318 L420,318 L440,318', 'cevher',
+           { kalinlik: 15, ok: [[150, 272, 90], [240, 300, 0], [396, 318, 0]] });
+    b.boru('M440,350 L470,392 L520,392', 'cevher', { kalinlik: 13, akis: false });
+    b.boru('M900,300 L900,268', 'cevher', { kalinlik: 13, ok: [[900, 284, -90]] });
+    b.boru('M1128,236 L1180,236 L1180,150', 'cevher',
+           { kalinlik: 14, ok: [[1158, 236, 0], [1180, 190, -90]] });
 
-    // --- kirici ---
-    b.kirici(360, 392, 'CR01', 'ÇENE KIRICI 1100×800');
-    b.oluk(360, 422, 400, 462);
+    /* ---- 1. ROM bunkeri ---- */
+    b.bunker(76, 108, 148, 132, 'BN01', 'ROM BUNKERİ', 'bunker.BN01.seviyye');
+    b.kart(60, KY, 'BN01', 'ROM BUNKERİ', [
+      ['bunker.BN01.seviyye', 'SEVİYE', '%', 0],
+      ['bunker.BN01.ton', 'MİKTAR', 't', 0]], { hat: [150, 288] });
 
-    // --- CV01 bant -> surge bunkeri ---
-    b.konveyor(420, 478, 700, 372, 'CV01', 'BANT 01 — kırıcı çıkışı', 'bant.CV01.yuk');
-    b.oluk(700, 356, 760, 300);
+    /* ---- 2. apron besleyici ---- */
+    b.besleyici(300, 300, 'FE01', 'APRON BESLEYİCİ');
+    b.kart(232, KY, 'FE01', 'APRON BESLEYİCİ', [
+      ['vsd.FE01.hiz', 'VSD HIZI', '%', 0],
+      ['motor.FE01.akim', 'AKIM', 'A', 1]], { hat: [300, 346] });
 
-    // --- surge bunkeri ---
-    b.bunker(742, 216, 138, 112, 'BN02', 'SURGE BUNKERİ', 'bunker.BN02.seviyye');
-    b.oluk(811, 362, 811, 396);
+    /* ---- 3. cene kirici ---- */
+    b.kirici(500, Y + 70, 'CR01', 'ÇENE KIRICI 1100×800');
+    b.kart(404, KY, 'CR01', 'ÇENE KIRICI', [
+      ['motor.CR01.akim', 'AKIM', 'A', 1],
+      ['motor.CR01.yuk', 'YÜK', '%', 0],
+      ['css.CR01.acilim', 'CSS', 'mm', 0]], { hat: [500, 380] });
 
-    // --- CV02 bant -> skip ---
-    b.konveyor(824, 414, 1108, 300, 'CV02', 'BANT 02 — skip besleme', 'bant.CV02.yuk');
-    b.not(1092, 262, 'SKİP / KUYU', 'et-eq');
-    b.boru('M1112,292 L1160,292 L1160,150', 'cevher',
-           { kalinlik: 11, ok: [[1140, 292, 0], [1160, 210, -90]] });
+    /* ---- 4. CV01 bant ---- */
+    b.konveyor(560, 372, 812, 292, 'CV01', 'kırıcı çıkış bandı', 'bant.CV01.yuk');
+    b.kart(596, KY, 'CV01', 'BANT 01', [
+      ['bant.CV01.yuk', 'YÜK', 't/h', 0],
+      ['motor.CV01.akim', 'AKIM', 'A', 1]], { hat: [686, 400] });
 
-    // --- olcumler ---
-    b.olcum(165, 160, 60, 402, 'LT', 'bunker.BN01.seviyye', 'ROM SEVİYE', '%', { ondalik: 0 });
-    b.olcum(218, 306, 176, 176, 'SC', 'vsd.FE01.hiz', 'BESLEYİCİ HIZ', '%', { ondalik: 0 });
-    b.olcum(306, 392, 210, 540, 'IT', 'motor.CR01.akim', 'KIRICI AKIM', 'A', { ondalik: 0 });
-    b.olcum(560, 426, 470, 596, 'WT', 'bant.CV01.yuk', 'BANT 01 YÜK', 't/h', { ondalik: 0 });
-    b.olcum(811, 272, 952, 150, 'LT', 'bunker.BN02.seviyye', 'SURGE SEVİYE', '%', { ondalik: 0 });
-    b.olcum(966, 358, 1040, 520, 'WT', 'bant.CV02.yuk', 'BANT 02 YÜK', 't/h', { ondalik: 0 });
+    /* ---- 5. surge bunkeri ---- */
+    b.bunker(836, 128, 128, 108, 'BN02', 'SURGE BUNKERİ', 'bunker.BN02.seviyye');
+    b.kart(788, KY, 'BN02', 'SURGE BUNKERİ', [
+      ['bunker.BN02.seviyye', 'SEVİYE', '%', 0],
+      ['bunker.BN02.ton', 'MİKTAR', 't', 0]], { hat: [900, 292] });
 
-    b.deger(24, 600, 'uretim.vardiya.ton', 'VARDİYA ÜRETİMİ', 't', 1);
-    b.deger(24, 638, 'css.CR01.acilim', 'KIRICI CSS', 'mm', 0);
+    /* ---- 6. CV02 bant ---- */
+    b.konveyor(940, 328, 1128, 268, 'CV02', 'skip besleme bandı', 'bant.CV02.yuk');
+    b.kart(980, KY, 'CV02', 'BANT 02', [
+      ['bant.CV02.yuk', 'YÜK', 't/h', 0],
+      ['motor.CV02.akim', 'AKIM', 'A', 1]], { hat: [1034, 380] });
 
-    const r = b.bitir(W, H);
-    r.click['eq_CR01'].ekstra = 'css';
-    r.click['eq_FE01'].ekstra = 'vsd';
-    return r;
+    /* ---- 7. skip ---- */
+    b.not(1150, 146, 'SKİP / KUYU', 'et-eq');
+    b.not(1150, 162, 'yüzeye taşıma', 'et-alt');
+    b.kart(1148, KY, 'ÜRETİM', 'VARDİYA', [
+      ['uretim.vardiya.ton', 'TOPLAM', 't', 1]], { genislik: 118 });
+
+    return b.bitir(W, H);
   }
 
   /* ============================================================ SU ATMA */
   function suAtma() {
     const b = new Cizim();
-    const W = 1240, H = 700;
+    const W = 1280, H = 660;
+    const KY = 452;
 
-    b.not(24, 30, 'ALAN 40 — OCAK SUYU TAHLİYE SİSTEMİ', 'et-baslik');
-    b.not(24, 50, 'Ocak suyu → çökeltme tankı → motorlu vana → sump → pompalar → yüzeye basma',
-          'et-not');
+    b.not(26, 34, 'ALAN 40 — OCAK SUYU TAHLİYE SİSTEMİ', 'et-baslik');
+    b.not(26, 54, 'Su akışı:  ocaktan → yüzeye', 'et-not');
 
-    // --- ocaktan gelen su ---
-    b.not(60, 128, 'OCAKTAN GELEN SU', 'et-alt');
-    b.boru('M62,150 L200,150 L200,196', 'su', { kalinlik: 10, id: 'giris',
-           ok: [[130, 150, 0], [200, 176, 90]] });
+    /* ---- ocaktan gelen su ---- */
+    b.not(56, 128, 'OCAKTAN GELEN SU', 'et-alt');
+    b.boru('M60,148 L150,148 L150,186', 'su', { kalinlik: 12,
+           ok: [[110, 148, 0], [150, 170, 90]] });
 
-    // --- cokeltme tanki ---
-    b.tank(140, 200, 128, 132, 'TK01', 'ÇÖKELTME TANKI', 'tank.TK01.seviyye');
-    b.boru('M204,340 L204,392 L330,392', 'su', { kalinlik: 10,
-           ok: [[204, 366, 90], [280, 392, 0]] });
+    /* ---- cokeltme tanki ---- */
+    b.tank(86, 190, 128, 124, 'TK01', 'ÇÖKELTME TANKI', 'tank.TK01.seviyye');
+    b.kart(64, KY, 'TK01', 'ÇÖKELTME TANKI', [
+      ['tank.TK01.seviyye', 'SEVİYE', '%', 0]], { hat: [150, 330] });
+    b.boru('M150,322 L150,372 L330,372', 'su', { kalinlik: 12,
+           ok: [[150, 350, 90], [270, 372, 0]] });
 
-    // --- motorlu vana ---
-    b.vana(330, 392, 'HV01', 'SUMP BESLEME VANASI', 0);
-    b.boru('M348,392 L470,392 L470,438', 'su', { kalinlik: 10,
-           ok: [[420, 392, 0], [470, 420, 90]] });
+    /* ---- motorlu vana ---- */
+    b.vana(360, 372, 'HV01', 'SUMP BESLEME VANASI');
+    b.kart(292, KY, 'HV01', 'BESLEME VANASI', [
+      ['vana.HV01.acilim', 'AÇILIM', '%', 0]], { hat: [360, 420] });
+    b.boru('M382,372 L470,372 L470,406', 'su', { kalinlik: 12,
+           ok: [[430, 372, 0], [470, 392, 90]] });
 
-    // --- sump ---
-    b.sump(408, 442, 168, 96, 'S1', 'SUMP HAVUZU', 'sump.S1.seviyye');
-    b.boru('M492,538 L492,572 L660,572 L660,468', 'su', { kalinlik: 9,
-           ok: [[580, 572, 0]] });
-    b.boru('M492,538 L492,572 L860,572 L860,468', 'su', { kalinlik: 9, akis: false });
+    /* ---- sump ---- */
+    b.sump(410, 410, 180, 96, 'S1', 'SUMP HAVUZU', 'sump.S1.seviyye');
+    b.kart(408, KY + 96, 'S1', 'SUMP HAVUZU', [
+      ['sump.S1.seviyye', 'SEVİYE', '%', 0],
+      ['sump.S1.hacim', 'HACİM', 'm³', 1]], { genislik: 150 });
+    b.boru('M500,506 L500,540 L700,540 L700,318', 'su', { kalinlik: 11,
+           ok: [[610, 540, 0], [700, 420, -90]] });
+    b.boru('M500,506 L500,540 L920,540 L920,318', 'su', { kalinlik: 11, akis: false });
 
-    // --- pompalar ---
-    b.pompa(660, 444, 'P1', 'SUMP POMPASI 1');
-    b.pompa(860, 444, 'P2', 'SUMP POMPASI 2');
-    b.boru('M677,428 L760,428 L760,300 L1060,300', 'su', { kalinlik: 10,
-           ok: [[760, 360, -90], [960, 300, 0]] });
-    b.boru('M877,428 L940,428 L940,300', 'su', { kalinlik: 9, akis: false });
-    b.not(1064, 292, 'YÜZEYE BASMA', 'et-eq');
-    b.not(1064, 308, 'Ø250 çelik boru · +300 m', 'et-alt');
+    /* ---- pompalar ---- */
+    b.pompa(700, 296, 'P1', 'SUMP POMPASI 1');
+    b.kart(628, 128, 'P1', 'SUMP POMPASI 1', [
+      ['motor.P1.akim', 'AKIM', 'A', 1]], { hat: [700, 256] });
+    b.pompa(920, 296, 'P2', 'SUMP POMPASI 2');
+    b.kart(848, 128, 'P2', 'SUMP POMPASI 2', [
+      ['motor.P2.akim', 'AKIM', 'A', 1]], { hat: [920, 256] });
 
-    // --- olcumler ---
-    b.olcum(204, 266, 84, 214, 'LT', 'tank.TK01.seviyye', 'TANK SEVİYE', '%', { ondalik: 0 });
-    b.olcum(330, 392, 330, 250, 'ZT', 'vana.HV01.acilim', 'VANA AÇILIM', '%', { ondalik: 0 });
-    b.olcum(492, 490, 330, 598, 'LT', 'sump.S1.seviyye', 'SUMP SEVİYE', '%', { ondalik: 0 });
-    b.olcum(660, 444, 640, 624, 'IT', 'motor.P1.akim', 'P1 AKIM', 'A', { ondalik: 0 });
-    b.olcum(860, 444, 858, 624, 'IT', 'motor.P2.akim', 'P2 AKIM', 'A', { ondalik: 0 });
-    b.olcum(1000, 300, 1064, 150, 'FT', 'basma.debi', 'BASMA DEBİSİ', 'L/s', { ondalik: 1 });
-    b.olcum(900, 300, 900, 150, 'PT', 'basma.basinc', 'BASMA BASINCI', 'bar', { ondalik: 1 });
+    /* ---- basma hatti ---- */
+    b.boru('M718,280 L780,280 L780,222 L1060,222', 'su', { kalinlik: 12,
+           ok: [[780, 250, -90], [980, 222, 0]] });
+    b.boru('M938,280 L1000,280 L1000,222', 'su', { kalinlik: 11, akis: false });
+    b.not(1068, 214, 'YÜZEYE BASMA', 'et-eq');
+    b.not(1068, 230, 'Ø250 çelik boru · +300 m', 'et-alt');
+    b.kart(1068, 258, 'BASMA', 'YÜZEYE', [
+      ['basma.debi', 'DEBİ', 'L/s', 1],
+      ['basma.basinc', 'BASINÇ', 'bar', 1]], { genislik: 150 });
 
     return b.bitir(W, H);
   }

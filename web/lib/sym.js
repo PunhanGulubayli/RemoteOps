@@ -63,10 +63,10 @@ class Cizim {
     const L = Math.hypot(x2 - x1, y2 - y1);
     this.kat.ekipman += `<g id="eq_${id}" class="ekipman tik" data-eq="1">
       <g transform="translate(${x1} ${y1}) rotate(${a})">
-        <rect x="0" y="-13" width="${L}" height="26" class="bant-govde"/>
-        <rect id="${id}_yukbar" x="4" y="-10" width="0" height="7" class="bant-yuk"/>
-        <circle cx="0" cy="0" r="12" class="eq-dolgu"/>
-        <circle id="${id}_govde" cx="${L}" cy="0" r="15" class="eq-dolgu"/>
+        <rect x="0" y="-16" width="${L}" height="32" class="bant-govde"/>
+        <rect id="${id}_yukbar" x="5" y="-13" width="0" height="10" class="bant-yuk"/>
+        <circle cx="0" cy="0" r="15" class="eq-dolgu"/>
+        <circle id="${id}_govde" cx="${L}" cy="0" r="19" class="eq-dolgu"/>
         <circle cx="${L}" cy="0" r="5" class="eq-gobek"/>
         <rect x="${L - 13}" y="17" width="26" height="14" class="eq-motor"/>
         <text x="${L}" y="27" class="et-mini" text-anchor="middle">M</text>
@@ -249,41 +249,55 @@ class Cizim {
 
   /* ================================================== OLCUM */
 
-  /** ISA-5.1 olcum balonu + deger kutusu.
-   *  fn: AT analiz · FT debi · PT basinc · LT seviye · IT akim · WT tarti · SC hiz */
-  olcum(x, y, bx, by, fn, etiket, ad, birim, opt = {}) {
-    const eid = 'v_' + etiket.replace(/[^\w]/g, '_');
-    const w = opt.genis || 66;
-    this.kat.olcum += `<g class="olcum">
-      <line x1="${x}" y1="${y}" x2="${bx}" y2="${by}" class="ol-baglanti"/>
-      <circle id="${eid}_balon" cx="${bx}" cy="${by}" r="16" class="ol-balon"/>
-      <line x1="${bx - 16}" y1="${by}" x2="${bx + 16}" y2="${by}" class="ol-ayirac"/>
-      <text x="${bx}" y="${by - 4}" class="ol-fn" text-anchor="middle">${fn}</text>
-      <text x="${bx}" y="${by + 11}" class="ol-no" text-anchor="middle">${this._no++}</text>
-      <rect id="${eid}_kutu" x="${bx - w / 2}" y="${by + 19}" width="${w}" height="21"
-            class="ol-kutu"/>
-      <text id="${eid}" x="${bx + w / 2 - 20}" y="${by + 34}" class="ol-deger"
-            text-anchor="end">—</text>
-      <text x="${bx + w / 2 - 5}" y="${by + 34}" class="ol-birim" text-anchor="end">${E(birim)}</text>
-      <text x="${bx}" y="${by + 52}" class="ol-etiket" text-anchor="middle">${E(ad)}</text>
-    </g>`;
-    this._b(eid, { tip: 'deger', etiket, ondalik: opt.ondalik ?? 1 });
-    this._b(`${eid}_balon`, { tip: 'balon', etiket });
-    this._b(`${eid}_kutu`, { tip: 'kutu', etiket });
+  /** Ekipmanin YANINDA duran kompakt bilgi karti.
+   *  Gercek HMI'da deger, ait oldugu ekipmanin yanindadir — uzun kesik
+   *  cizgilerle ekranin obur ucuna gitmez. Okunabilirlik bundan gelir.
+   *
+   *  satirlar: [[etiket, kisaAd, birim, ondalik], ...]
+   */
+  kart(x, y, baslik, altbaslik, satirlar, opt = {}) {
+    const w = opt.genislik || 152;
+    const bh = altbaslik ? 30 : 20;
+    const h = bh + satirlar.length * 19 + 6;
+    const kid = 'kart_' + baslik.replace(/[^\w]/g, '');
+    let ic = '';
+    satirlar.forEach(([et, ad, br, ond], i) => {
+      const eid = 'v_' + et.replace(/[^\w]/g, '_');
+      const yy = y + bh + 14 + i * 19;
+      ic += `<text x="${x + 9}" y="${yy}" class="kt-ad">${E(ad)}</text>
+             <text id="${eid}" x="${x + w - 30}" y="${yy}" class="kt-deger"
+                   text-anchor="end">—</text>
+             <text x="${x + w - 9}" y="${yy}" class="kt-birim" text-anchor="end">${E(br)}</text>`;
+      this._b(eid, { tip: 'deger', etiket: et, ondalik: ond ?? 0 });
+      this._b(`${eid}_satir`, { tip: 'kutu', etiket: et });
+    });
+    this.kat.olcum += `<g class="bkart">
+      <rect id="${kid}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3" class="kt-kutu"/>
+      <rect x="${x}" y="${y}" width="${w}" height="${bh}" rx="3" class="kt-bas"/>
+      <text x="${x + 9}" y="${y + 14}" class="kt-baslik">${E(baslik)}</text>
+      ${altbaslik ? `<text x="${x + 9}" y="${y + 25}" class="kt-alt">${E(altbaslik)}</text>` : ''}
+      ${ic}</g>`;
+    if (opt.hat) this.kat.olcum +=
+      `<line x1="${opt.hat[0]}" y1="${opt.hat[1]}" x2="${x + w / 2}" y2="${y}"
+             class="kt-cizgi"/>`;
     return this;
   }
 
-  /** Kucuk deger etiketi (balonsuz) */
-  deger(x, y, etiket, ad, birim, ondalik = 0) {
+  /** Hat uzerinde kucuk ISA-5.1 olcum balonu (KISA baglanti ile).
+   *  Yalnizca proses hattina ait olculer icin — ekipman degerleri kart'ta. */
+  olcum(x, y, dx, dy, fn, etiket, birim, opt = {}) {
     const eid = 'v_' + etiket.replace(/[^\w]/g, '_');
-    this.kat.olcum += `<g class="mini-deger">
-      <rect x="${x}" y="${y}" width="78" height="30" class="ol-kutu" id="${eid}_kutu"/>
-      <text x="${x + 5}" y="${y + 11}" class="ol-etiket">${E(ad)}</text>
-      <text id="${eid}" x="${x + 56}" y="${y + 25}" class="ol-deger" text-anchor="end">—</text>
-      <text x="${x + 73}" y="${y + 25}" class="ol-birim" text-anchor="end">${E(birim)}</text>
+    const bx = x + dx, by = y + dy;
+    this.kat.olcum += `<g class="olcum">
+      <line x1="${x}" y1="${y}" x2="${bx}" y2="${by}" class="ol-baglanti"/>
+      <circle id="${eid}_balon" cx="${bx}" cy="${by}" r="19" class="ol-balon"/>
+      <text x="${bx}" y="${by - 4}" class="ol-fn" text-anchor="middle">${fn}</text>
+      <text id="${eid}" x="${bx}" y="${by + 10}" class="ol-ideger"
+            text-anchor="middle">—</text>
+      <text x="${bx}" y="${by + 32}" class="ol-birim" text-anchor="middle">${E(birim)}</text>
     </g>`;
-    this._b(eid, { tip: 'deger', etiket, ondalik });
-    this._b(`${eid}_kutu`, { tip: 'kutu', etiket });
+    this._b(eid, { tip: 'deger', etiket, ondalik: opt.ondalik ?? 0 });
+    this._b(`${eid}_balon`, { tip: 'balon', etiket });
     return this;
   }
 

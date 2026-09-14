@@ -440,6 +440,21 @@ Brauzer köhnə `js/css`-i keşdən oxuyurdu, dəyişikliklər görünmürdü.
 `server/main.py`-də `onbellek_kapali` middleware ilə statik fayllara
 `Cache-Control: no-store`. **Dəyişiklik görünmürsə əvvəlcə bunu yoxlayın.**
 
+### ⚠️ Görsel dil qaydaları (bir dəfə səhv edildi, düzəldildi)
+
+İlk versiyada ekran **oxunmurdu**: hər şey eyni tünd-mavi tonda idi, avadanlıq
+fondan ayrılmırdı və ölçü balonları uzun kəsik xətlərlə ekrana dağılmışdı.
+Üç qayda ilə düzəldildi:
+
+| Qayda | Niyə |
+|---|---|
+| **Axın xətti əsas qəhrəmandır** | Cevher `#F0A63C` (parlaq amber), su `#35B8D8` (parlaq cyan), təmiz hava `#3ED9A6`. Qalın (11–15 px), istiqamət oxları ilə. Göz axını bir baxışda izləyə bilməlidir |
+| **Avadanlıq fondan kəskin ayrılsın** | Fon `#060C13` (demək olar qara), avadanlıq konturu `#9FC4DE` **2.6 px**. İşləyən avadanlıq dolu, dayanan boş |
+| **Dəyər avadanlığın YANINDA olsun** | Uzun kəsik xətlərlə ekranın o biri ucuna getməsin. `b.kart(...)` kompakt panel — başlıq + 1–3 sətir dəyər, avadanlığın altında bir cərgədə |
+
+⛔ **Balonları ekrana səpələməyin.** ISA-5.1 balonu yalnız **hat üzərindəki**
+proses ölçüsü üçün, qısa bağlantı ilə. Ekipman dəyərləri karta gedir.
+
 ### Çizim elementləri (`web/sema_ciz.js`)
 | Element | Necə çəkilir |
 |---|---|

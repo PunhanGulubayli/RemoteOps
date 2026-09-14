@@ -12,24 +12,25 @@
   --ok: #37B07A;
 }
 
-/* ───────────────────────────────── KOYU TEMA (kontrol odası) */
+/* ───────────────────────────────── KOYU TEMA (kontrol odası)
+   Yüksek kontrast: ekipman zeminden kesin ayrılır, akış hattı baskın renktir. */
 .tema-koyu {
-  --zemin: #0A1724;  --panel: #122636;  --panel2: #0D1E2C;  --panel3: #18303F;
-  --cizgi: #24435C;  --kenar: #3D6884;
-  --yazi: #DCE8F2;   --dim: #83A0B8;    --soluk: #5E7C93;
-  --eq-ic: #1E3B51;  --eq-kenar: #6E96B8;  --eq-dolu: #2C5470;  --eq-bos: #0C1A26;
-  --cevher: #A5793F; --su: #3E8E9E;     --hava: #3E8E7E;
-  --temiz: #3E8E7E;  --donus: #A07A46;  --arin: #7E6FA8;  --karma: #5B7A93;
-  --kutu: #071320;
+  --zemin: #060C13;  --panel: #101D28;  --panel2: #0A141D;  --panel3: #162835;
+  --cizgi: #223D52;  --kenar: #47708F;
+  --yazi: #EAF3FA;   --dim: #93B2C8;    --soluk: #6A8AA3;
+  --eq-ic: #16242F;  --eq-kenar: #9FC4DE;  --eq-dolu: #2F6C93;  --eq-bos: #101C25;
+  --cevher: #F0A63C; --su: #35B8D8;     --hava: #3ED9A6;
+  --temiz: #3ED9A6;  --donus: #D9A34A;  --arin: #B08BE0;  --karma: #6E90A8;
+  --kutu: #05090E;
 }
 /* ───────────────────────────────── AÇIK TEMA (ISA-101 HPHMI) */
 .tema-acik {
-  --zemin: #C9C9C9;  --panel: #D8D8D8;  --panel2: #BFBFBF;  --panel3: #E6E6E6;
-  --cizgi: #A0A0A0;  --kenar: #454545;
-  --yazi: #171717;   --dim: #555;       --soluk: #777;
-  --eq-ic: #FFFFFF;  --eq-kenar: #404040;  --eq-dolu: #6E6E6E;  --eq-bos: #FFFFFF;
-  --cevher: #93704A; --su: #5A8A96;     --hava: #6E9C93;
-  --temiz: #6E9C93;  --donus: #A88F63;  --arin: #8C82AC;  --karma: #8E8E8E;
+  --zemin: #CFCFCF;  --panel: #DEDEDE;  --panel2: #C2C2C2;  --panel3: #ECECEC;
+  --cizgi: #9B9B9B;  --kenar: #3A3A3A;
+  --yazi: #121212;   --dim: #4E4E4E;    --soluk: #6E6E6E;
+  --eq-ic: #FFFFFF;  --eq-kenar: #2A2A2A;  --eq-dolu: #5E5E5E;  --eq-bos: #FFFFFF;
+  --cevher: #C07A16; --su: #1E7E99;     --hava: #1F8A63;
+  --temiz: #1F8A63;  --donus: #A87A28;  --arin: #6B4FA0;  --karma: #808080;
   --kutu: #FFFFFF;
 }
 
@@ -270,12 +271,13 @@ tr.pasif { opacity: .42; }
 #proses-svg .zemin { fill: var(--zemin); }
 
 /* hatlar */
-#proses-svg .hat-dis { fill: none; stroke: var(--kenar); stroke-linejoin: round;
+#proses-svg .hat-dis { fill: none; stroke: #000; opacity: .55; stroke-linejoin: round;
                        stroke-linecap: round; }
 #proses-svg .hat-ic  { fill: none; stroke: var(--karma); stroke-linejoin: round;
                        stroke-linecap: round; }
-#proses-svg .hat-akis { fill: none; stroke: var(--yazi); opacity: .28;
-                        stroke-dasharray: 9 20; stroke-linecap: butt; }
+#proses-svg .hat-akis { fill: none; stroke: #fff; opacity: .42;
+                        stroke-dasharray: 10 22; stroke-linecap: butt; }
+.tema-acik #proses-svg .hat-akis { stroke: #fff; opacity: .85; }
 #proses-svg .sv-cevher .hat-ic { stroke: var(--cevher); }
 #proses-svg .sv-su     .hat-ic { stroke: var(--su); }
 #proses-svg .sv-hava   .hat-ic { stroke: var(--hava); }
@@ -289,8 +291,8 @@ tr.pasif { opacity: .42; }
 #proses-svg .oluk { fill: var(--eq-ic); stroke: var(--eq-kenar); stroke-width: 1.5; }
 
 /* ekipman */
-#proses-svg .eq-govde  { fill: var(--eq-ic); stroke: var(--eq-kenar); stroke-width: 1.7; }
-#proses-svg .eq-dolgu  { fill: var(--eq-bos); stroke: var(--eq-kenar); stroke-width: 1.7; }
+#proses-svg .eq-govde  { fill: var(--eq-ic); stroke: var(--eq-kenar); stroke-width: 2.6; }
+#proses-svg .eq-dolgu  { fill: var(--eq-bos); stroke: var(--eq-kenar); stroke-width: 2.6; }
 #proses-svg .eq-gobek  { fill: var(--eq-kenar); }
 #proses-svg .eq-motor  { fill: var(--eq-kenar); }
 #proses-svg .eq-kaide  { fill: var(--eq-kenar); }
@@ -298,8 +300,8 @@ tr.pasif { opacity: .42; }
 #proses-svg .eq-volan  { fill: var(--eq-ic); stroke: var(--eq-kenar); stroke-width: 1.7; }
 #proses-svg .kirici-cene { stroke: var(--eq-kenar); stroke-width: 3.4; fill: none;
                            stroke-linecap: round; }
-#proses-svg .bant-govde { fill: var(--eq-ic); stroke: var(--eq-kenar); stroke-width: 1.6; }
-#proses-svg .bant-yuk   { fill: var(--cevher); }
+#proses-svg .bant-govde { fill: var(--eq-ic); stroke: var(--eq-kenar); stroke-width: 2.4; }
+#proses-svg .bant-yuk   { fill: var(--cevher); opacity: .95; }
 #proses-svg .fan-kanat  { fill: var(--eq-ic); stroke: var(--eq-kenar); stroke-width: .9; }
 #proses-svg .fan-kanatlar { transform-origin: center; }
 #proses-svg .doner .fan-kanatlar { animation: fan 1.7s linear infinite; }
@@ -307,17 +309,31 @@ tr.pasif { opacity: .42; }
 
 /* kaplar */
 #proses-svg .kap-ic      { fill: var(--kutu); }
-#proses-svg .kap-cerceve { fill: none; stroke: var(--eq-kenar); stroke-width: 2; }
+#proses-svg .kap-cerceve { fill: none; stroke: var(--eq-kenar); stroke-width: 2.8; }
 #proses-svg .kap-taban   { stroke: var(--eq-kenar); stroke-width: 3.2; }
-#proses-svg .kap-huni    { fill: var(--eq-ic); stroke: var(--eq-kenar); stroke-width: 2; }
-#proses-svg .kap-malzeme { fill: var(--cevher); opacity: .78; }
-#proses-svg .kap-sivi    { fill: var(--su); opacity: .6; }
+#proses-svg .kap-huni    { fill: var(--eq-ic); stroke: var(--eq-kenar); stroke-width: 2.8; }
+#proses-svg .kap-malzeme { fill: var(--cevher); opacity: .92; }
+#proses-svg .kap-sivi    { fill: var(--su); opacity: .75; }
+
+/* ekipman bilgi kartı — değer ekipmanın YANINDA durur */
+#proses-svg .kt-kutu   { fill: var(--panel2); stroke: var(--kenar); stroke-width: 1.4; }
+#proses-svg .kt-bas    { fill: var(--panel3); }
+#proses-svg .kt-baslik { font-size: 12px; font-weight: 700; fill: var(--yazi);
+                         letter-spacing: .5px; }
+#proses-svg .kt-alt    { font-size: 9px; fill: var(--soluk); }
+#proses-svg .kt-ad     { font-size: 10px; fill: var(--dim); letter-spacing: .3px; }
+#proses-svg .kt-deger  { font-size: 14px; font-weight: 700; fill: var(--yazi);
+                         font-variant-numeric: tabular-nums; }
+#proses-svg .kt-birim  { font-size: 9px; fill: var(--soluk); }
+#proses-svg .kt-cizgi  { stroke: var(--kenar); stroke-width: 1.2; opacity: .55; }
+#proses-svg .ol-ideger { font-size: 13px; font-weight: 700; fill: var(--yazi);
+                         font-variant-numeric: tabular-nums; }
 
 /* ölçüm */
 #proses-svg .ol-baglanti { stroke: var(--soluk); stroke-width: 1; stroke-dasharray: 4 3; }
-#proses-svg .ol-balon { fill: var(--kutu); stroke: var(--eq-kenar); stroke-width: 1.5; }
+#proses-svg .ol-balon { fill: var(--kutu); stroke: var(--eq-kenar); stroke-width: 2; }
 #proses-svg .ol-ayirac { stroke: var(--eq-kenar); stroke-width: 1; }
-#proses-svg .ol-fn { font-size: 10px; font-weight: 700; fill: var(--yazi); }
+#proses-svg .ol-fn { font-size: 9.5px; font-weight: 700; fill: var(--yazi); }
 #proses-svg .ol-no { font-size: 9px; fill: var(--soluk); }
 #proses-svg .ol-kutu { fill: var(--kutu); stroke: var(--eq-kenar); stroke-width: 1.2; }
 #proses-svg .ol-deger { font-size: 14.5px; font-weight: 700; fill: var(--yazi);
@@ -326,14 +342,14 @@ tr.pasif { opacity: .42; }
 #proses-svg .ol-etiket { font-size: 8.6px; fill: var(--soluk); letter-spacing: .4px; }
 
 /* etiketler */
-#proses-svg .et-baslik { font-size: 15px; font-weight: 700; fill: var(--yazi);
+#proses-svg .et-baslik { font-size: 16px; font-weight: 700; fill: var(--yazi);
                          letter-spacing: .8px; }
 #proses-svg .et-not { font-size: 11.5px; fill: var(--dim); }
-#proses-svg .et-eq  { font-size: 12px; font-weight: 700; fill: var(--yazi);
+#proses-svg .et-eq  { font-size: 13.5px; font-weight: 700; fill: var(--yazi);
                       letter-spacing: .4px; }
-#proses-svg .et-alt { font-size: 9.5px; fill: var(--soluk); }
+#proses-svg .et-alt { font-size: 10.5px; fill: var(--soluk); }
 #proses-svg .et-mini { font-size: 9px; font-weight: 700; fill: var(--zemin); }
-#proses-svg .et-durum { font-size: 9.5px; font-weight: 700; fill: var(--dim);
+#proses-svg .et-durum { font-size: 11px; font-weight: 700; fill: var(--dim);
                         letter-spacing: .5px; }
 #proses-svg .bolge-kutu { fill: none; stroke: var(--cizgi); stroke-width: 1;
                           stroke-dasharray: 6 5; }
