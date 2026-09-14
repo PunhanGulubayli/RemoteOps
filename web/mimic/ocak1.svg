@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 600" id="sema-ocak1">
+  <!-- ================================================================
+       RemoteOps - Ocak 1 ventilasyon semasi
+       ANSI/ISA-101 High Performance HMI prensipleri:
+         - Normal durumda RENK YOK. Renk yalnizca anormal durumda.
+         - Gri tonlar: fon #C8C8C8, hat #808080, kontur #404040
+         - Alarm renkleri (P1 #FF0000, P2 #FFA500, P3 #FFFF00, sensor #FF00FF)
+           BASKA HICBIR YERDE kullanilmaz.
+         - Gradient / 3B / golge YOK.
+       Bu dosya bir SIRKETE OZEL degistirilebilir. Motor degismez;
+       sadece bu SVG + ocak1.map.json degisir.
+       ================================================================ -->
+  <style>
+    #sema-ocak1 { font-family: "Segoe UI", system-ui, sans-serif; }
+    .fon      { fill: #C8C8C8; }
+    .hat      { stroke: #808080; stroke-width: 7; fill: none; stroke-linecap: round; }
+    .hat-ince { stroke: #909090; stroke-width: 3; fill: none; stroke-dasharray: 6 4; }
+    .kutu     { fill: #FFFFFF; stroke: #404040; stroke-width: 1.6; }
+    .kutu-dolu{ fill: #6E6E6E; stroke: #404040; stroke-width: 1.6; }
+    .yazi     { fill: #1A1A1A; font-size: 12px; }
+    .yazi-k   { fill: #1A1A1A; font-size: 10px; }
+    .yazi-b   { fill: #1A1A1A; font-size: 13px; font-weight: 600; }
+    .deger    { fill: #1A1A1A; font-size: 14px; font-weight: 600;
+                font-variant-numeric: tabular-nums; }
+    .birim    { fill: #555555; font-size: 10px; }
+    .bar-yol  { fill: #FFFFFF; stroke: #404040; stroke-width: 1; }
+    .bar-dolu { fill: #6E6E6E; }
+    .bar-norm { fill: #AFAFAF; }           /* normal calisma araligi bandi */
+    .tik      { stroke: #404040; stroke-width: 1.4; }
+    .baslik   { fill: #1A1A1A; font-size: 15px; font-weight: 700; }
+  </style>
+
+  <rect class="fon" x="0" y="0" width="1020" height="600"/>
+
+  <!-- ============ YUZEY ============ -->
+  <line x1="40" y1="46" x2="980" y2="46" stroke="#404040" stroke-width="2.5"/>
+  <text class="yazi-k" x="44" y="40">YUZEY</text>
+
+  <!-- ============ GIRIS KUYUSU (B01) ============ -->
+  <path class="hat" d="M130,46 L130,150"/>
+  <text class="yazi-k" x="60" y="100">GIRIS KUYUSU</text>
+  <text class="yazi-k" x="60" y="112">B01</text>
+
+  <!-- ============ ANA FAN + CIKIS KUYUSU (B14) ============ -->
+  <path class="hat" d="M890,150 L890,46"/>
+  <g id="FAN_ana_1">
+    <rect class="kutu-dolu" id="FAN_ana_1_govde" x="856" y="12" width="68" height="30" rx="3"/>
+    <text class="yazi-b" x="890" y="32" text-anchor="middle" fill="#FFFFFF">FAN</text>
+  </g>
+  <text class="yazi-k" x="930" y="100">CIKIS KUYUSU</text>
+  <text class="yazi-k" x="930" y="112">B14</text>
+
+  <!-- fan olculeri -->
+  <g transform="translate(700,8)">
+    <text class="yazi-k" x="0"  y="10">DEBI</text>
+    <text class="deger" id="FAN_ana_1_debi"   x="0"  y="26">--</text>
+    <text class="birim" x="46" y="26">m3/s</text>
+    <text class="yazi-k" x="0"  y="44">BASINC</text>
+    <text class="deger" id="FAN_ana_1_basinc" x="0"  y="60">--</text>
+    <text class="birim" x="40" y="60">Pa</text>
+    <text class="yazi-k" x="90" y="10">GUC</text>
+    <text class="deger" id="FAN_ana_1_guc"    x="90" y="26">--</text>
+    <text class="birim" x="128" y="26">kW</text>
+    <text class="yazi-k" x="90" y="44">DURUM</text>
+    <text class="deger" id="FAN_ana_1_durum"  x="90" y="60">--</text>
+  </g>
+
+  <!-- ============ ANA YOLLAR ============ -->
+  <path class="hat" d="M130,150 L130,470"/>      <!-- giris kolonu -->
+  <path class="hat" d="M890,150 L890,470"/>      <!-- donus kolonu -->
+  <text class="yazi-k" x="138" y="168">N1</text>
+  <text class="yazi-k" x="862" y="168">N11</text>
+
+  <!-- ============ QAPI 1 (kisa devre yolu) ============ -->
+  <path class="hat-ince" d="M130,196 L890,196"/>
+  <g id="QAPI_1">
+    <rect class="kutu-dolu" id="QAPI_1_govde" x="486" y="182" width="48" height="28" rx="2"/>
+    <text class="yazi-k" x="510" y="201" text-anchor="middle" fill="#FFFFFF">KAPI</text>
+  </g>
+  <text class="yazi-b" x="440" y="176" text-anchor="middle">QAPI 1</text>
+  <text class="yazi" id="QAPI_1_durum" x="556" y="201">--</text>
+  <text class="yazi-k" x="556" y="214">B15 - kisa devre yolu</text>
+
+  <!-- ============ ARIN 1 ============ -->
+  <g id="grup-ARIN_1">
+    <path class="hat" d="M130,268 L380,268"/>
+    <path class="hat" d="M640,268 L890,268"/>
+    <rect class="kutu" x="380" y="244" width="260" height="48" rx="3"/>
+    <text class="yazi-b" x="392" y="264">ARIN 1</text>
+    <text class="yazi-k" x="392" y="282">B05</text>
+
+    <!-- CH4 analog gostergesi (ISA-101 imza elemani) -->
+    <g transform="translate(452,250)">
+      <text class="yazi-k" x="0" y="8">CH4</text>
+      <rect class="bar-yol"  x="26" y="0" width="96" height="12"/>
+      <rect class="bar-norm" x="26" y="0" width="19" height="12"/>
+      <rect class="bar-dolu" id="ARIN_1_ch4_bar" x="26" y="0" width="10" height="12"/>
+      <line class="tik" id="tik" x1="54.8" y1="-3" x2="54.8" y2="15"/>
+      <line class="tik" x1="64.4" y1="-3" x2="64.4" y2="15"/>
+      <text class="deger" id="ARIN_1_ch4" x="130" y="11">--</text>
+      <text class="birim" x="166" y="11">%</text>
+    </g>
+    <!-- Debi analog gostergesi -->
+    <g transform="translate(452,272)">
+      <text class="yazi-k" x="0" y="8">HAVA</text>
+      <rect class="bar-yol"  x="26" y="0" width="96" height="12"/>
+      <rect class="bar-norm" x="66" y="0" width="14" height="12"/>
+      <rect class="bar-dolu" id="ARIN_1_debi_bar" x="26" y="0" width="60" height="12"/>
+      <line class="tik" x1="58" y1="-3" x2="58" y2="15"/>
+      <text class="deger" id="ARIN_1_debi" x="130" y="11">--</text>
+      <text class="birim" x="170" y="11">m3/s</text>
+    </g>
+  </g>
+
+  <!-- ============ ARIN 2 ============ -->
+  <g id="grup-ARIN_2">
+    <path class="hat" d="M130,348 L380,348"/>
+    <path class="hat" d="M640,348 L890,348"/>
+    <rect class="kutu" x="380" y="324" width="260" height="48" rx="3"/>
+    <text class="yazi-b" x="392" y="344">ARIN 2</text>
+    <text class="yazi-k" x="392" y="362">B08</text>
+    <g transform="translate(452,330)">
+      <text class="yazi-k" x="0" y="8">CH4</text>
+      <rect class="bar-yol"  x="26" y="0" width="96" height="12"/>
+      <rect class="bar-norm" x="26" y="0" width="19" height="12"/>
+      <rect class="bar-dolu" id="ARIN_2_ch4_bar" x="26" y="0" width="13" height="12"/>
+      <line class="tik" x1="54.8" y1="-3" x2="54.8" y2="15"/>
+      <line class="tik" x1="64.4" y1="-3" x2="64.4" y2="15"/>
+      <text class="deger" id="ARIN_2_ch4" x="130" y="11">--</text>
+      <text class="birim" x="166" y="11">%</text>
+    </g>
+    <g transform="translate(452,352)">
+      <text class="yazi-k" x="0" y="8">HAVA</text>
+      <rect class="bar-yol"  x="26" y="0" width="96" height="12"/>
+      <rect class="bar-norm" x="66" y="0" width="14" height="12"/>
+      <rect class="bar-dolu" id="ARIN_2_debi_bar" x="26" y="0" width="57" height="12"/>
+      <line class="tik" x1="58" y1="-3" x2="58" y2="15"/>
+      <text class="deger" id="ARIN_2_debi" x="130" y="11">--</text>
+      <text class="birim" x="170" y="11">m3/s</text>
+    </g>
+  </g>
+
+  <!-- ============ ARIN 3 ============ -->
+  <g id="grup-ARIN_3">
+    <path class="hat" d="M130,428 L380,428"/>
+    <path class="hat" d="M640,428 L890,428"/>
+    <rect class="kutu" x="380" y="404" width="260" height="48" rx="3"/>
+    <text class="yazi-b" x="392" y="424">ARIN 3</text>
+    <text class="yazi-k" x="392" y="442">B11</text>
+    <g transform="translate(452,410)">
+      <text class="yazi-k" x="0" y="8">CH4</text>
+      <rect class="bar-yol"  x="26" y="0" width="96" height="12"/>
+      <rect class="bar-norm" x="26" y="0" width="19" height="12"/>
+      <rect class="bar-dolu" id="ARIN_3_ch4_bar" x="26" y="0" width="8" height="12"/>
+      <line class="tik" x1="54.8" y1="-3" x2="54.8" y2="15"/>
+      <line class="tik" x1="64.4" y1="-3" x2="64.4" y2="15"/>
+      <text class="deger" id="ARIN_3_ch4" x="130" y="11">--</text>
+      <text class="birim" x="166" y="11">%</text>
+    </g>
+    <g transform="translate(452,432)">
+      <text class="yazi-k" x="0" y="8">HAVA</text>
+      <rect class="bar-yol"  x="26" y="0" width="96" height="12"/>
+      <rect class="bar-norm" x="66" y="0" width="14" height="12"/>
+      <rect class="bar-dolu" id="ARIN_3_debi_bar" x="26" y="0" width="54" height="12"/>
+      <line class="tik" x1="58" y1="-3" x2="58" y2="15"/>
+      <text class="deger" id="ARIN_3_debi" x="130" y="11">--</text>
+      <text class="birim" x="170" y="11">m3/s</text>
+    </g>
+  </g>
+
+  <!-- ============ TENZIM T1 (ARIN 3 donusu / B12) ============ -->
+  <g id="T1">
+    <rect class="kutu" id="T1_govde" x="700" y="414" width="44" height="28" rx="2"/>
+    <text class="yazi-k" x="722" y="432" text-anchor="middle">REG</text>
+  </g>
+  <text class="yazi-b" x="722" y="408" text-anchor="middle">TENZIM 1</text>
+  <text class="yazi" id="T1_acilim" x="752" y="433">--</text>
+  <text class="birim" x="782" y="433">%</text>
+
+  <!-- ============ QAPI 2 ============ -->
+  <path class="hat-ince" d="M130,492 L890,492"/>
+  <g id="QAPI_2">
+    <rect class="kutu-dolu" id="QAPI_2_govde" x="486" y="478" width="48" height="28" rx="2"/>
+    <text class="yazi-k" x="510" y="497" text-anchor="middle" fill="#FFFFFF">KAPI</text>
+  </g>
+  <text class="yazi-b" x="440" y="472" text-anchor="middle">QAPI 2</text>
+  <text class="yazi" id="QAPI_2_durum" x="556" y="497">--</text>
+
+  <!-- ============ SU ATMA (SUMP + NASOSLAR) ============ -->
+  <g transform="translate(40,520)">
+    <text class="baslik" x="0" y="12">SU ATMA</text>
+    <rect class="bar-yol"  x="0"  y="24" width="130" height="16"/>
+    <rect class="bar-norm" x="26" y="24" width="65"  height="16"/>
+    <rect class="bar-dolu" id="SUMP_S1_bar" x="0" y="24" width="65" height="16"/>
+    <line class="tik" x1="97.5" y1="21" x2="97.5" y2="43"/>
+    <line class="tik" x1="119.6" y1="21" x2="119.6" y2="43"/>
+    <text class="deger" id="SUMP_S1_seviyye" x="140" y="37">--</text>
+    <text class="birim" x="176" y="37">%</text>
+    <text class="yazi-k" x="0" y="54">SUMP S1</text>
+
+    <g id="NASOS_P1" transform="translate(220,20)">
+      <rect class="kutu" id="NASOS_P1_govde" x="0" y="0" width="56" height="24" rx="3"/>
+      <text class="yazi-k" x="28" y="16" text-anchor="middle">P1</text>
+      <text class="yazi-k" id="NASOS_P1_durum" x="0" y="36">--</text>
+    </g>
+    <g id="NASOS_P2" transform="translate(292,20)">
+      <rect class="kutu" id="NASOS_P2_govde" x="0" y="0" width="56" height="24" rx="3"/>
+      <text class="yazi-k" x="28" y="16" text-anchor="middle">P2</text>
+      <text class="yazi-k" id="NASOS_P2_durum" x="0" y="36">--</text>
+    </g>
+  </g>
+
+  <!-- ============ KONVEYOR ============ -->
+  <g transform="translate(600,520)">
+    <text class="baslik" x="0" y="12">KONVEYOR</text>
+    <g id="KONVEYER_K1">
+      <rect class="kutu" id="KONVEYER_K1_govde" x="0" y="24" width="96" height="24" rx="3"/>
+      <text class="yazi-k" x="48" y="40" text-anchor="middle">K1</text>
+    </g>
+    <text class="yazi-k"  x="112" y="34">AKIM</text>
+    <text class="deger" id="KONVEYER_K1_akim" x="152" y="34">--</text>
+    <text class="birim"   x="188" y="34">A</text>
+    <text class="yazi-k"  x="112" y="50">YUK</text>
+    <text class="deger" id="KONVEYER_K1_yuk"  x="152" y="50">--</text>
+    <text class="birim"   x="188" y="50">%</text>
+    <text class="yazi-k" id="KONVEYER_K1_durum" x="0" y="60">--</text>
+  </g>
+</svg>

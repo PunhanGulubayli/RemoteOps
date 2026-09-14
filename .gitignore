@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Baza və qeydlər
+*.db
+*.sqlite
+*.sqlite3
+data/kayitlar/*.csv
+!data/kayitlar/.gitkeep
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+desktop.ini
+Thumbs.db
+
+# Gizli
+.env
+.env.local

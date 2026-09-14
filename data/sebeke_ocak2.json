@@ -1,0 +1,253 @@
+{
+  "ad": "Editorde Cizilen Ocak - 2",
+  "aciklama": "Editorde olusturuldu.",
+  "versiya": "1.0",
+  "birimler": {
+    "R": "N*s^2/m^8 (Atkinson direnci)",
+    "Q": "m^3/s",
+    "P": "Pa",
+    "A": "m^2",
+    "L": "m"
+  },
+  "cizim": {
+    "genislik": 1020,
+    "yukseklik": 620
+  },
+  "dugumler": [
+    {
+      "id": "N0",
+      "ad": "Yuzey / Atmosfer",
+      "x": 500,
+      "y": 60,
+      "tip": "atmosfer"
+    },
+    {
+      "id": "N1",
+      "ad": "Giris dibi",
+      "x": 160,
+      "y": 240,
+      "tip": "kavsak"
+    },
+    {
+      "id": "N2",
+      "ad": "A1 giris",
+      "x": 380,
+      "y": 340,
+      "tip": "kavsak"
+    },
+    {
+      "id": "N3",
+      "ad": "A1 cikis",
+      "x": 680,
+      "y": 340,
+      "tip": "kavsak"
+    },
+    {
+      "id": "N4",
+      "ad": "A2 giris",
+      "x": 380,
+      "y": 480,
+      "tip": "kavsak"
+    },
+    {
+      "id": "N5",
+      "ad": "A2 cikis",
+      "x": 680,
+      "y": 480,
+      "tip": "kavsak"
+    },
+    {
+      "id": "N6",
+      "ad": "Donus",
+      "x": 840,
+      "y": 420,
+      "tip": "kavsak"
+    },
+    {
+      "id": "N7",
+      "ad": "Cikis dibi",
+      "x": 880,
+      "y": 240,
+      "tip": "kavsak"
+    }
+  ],
+  "kollar": [
+    {
+      "id": "B01",
+      "ad": "Kuyu B01",
+      "from": "N0",
+      "to": "N1",
+      "A": 19.6,
+      "L": 300,
+      "k": 0.004,
+      "R": 0.0028,
+      "tip": "kuyu"
+    },
+    {
+      "id": "B02",
+      "ad": "Galeri B02",
+      "from": "N1",
+      "to": "N2",
+      "A": 14,
+      "L": 400,
+      "k": 0.012,
+      "R": 0.0264,
+      "tip": "galeri"
+    },
+    {
+      "id": "B03",
+      "ad": "Arin B03",
+      "from": "N2",
+      "to": "N3",
+      "A": 7.5,
+      "L": 160,
+      "k": 0.016,
+      "R": 0.067,
+      "tip": "arin",
+      "arin": "ARIN_1"
+    },
+    {
+      "id": "B04",
+      "ad": "Galeri B04",
+      "from": "N3",
+      "to": "N6",
+      "A": 14,
+      "L": 400,
+      "k": 0.012,
+      "R": 0.0264,
+      "tip": "galeri"
+    },
+    {
+      "id": "B05",
+      "ad": "Galeri B05",
+      "from": "N1",
+      "to": "N4",
+      "A": 14,
+      "L": 400,
+      "k": 0.012,
+      "R": 0.0264,
+      "tip": "galeri"
+    },
+    {
+      "id": "B06",
+      "ad": "Arin B06",
+      "from": "N4",
+      "to": "N5",
+      "A": 7.5,
+      "L": 160,
+      "k": 0.016,
+      "R": 0.067,
+      "tip": "arin",
+      "arin": "ARIN_2"
+    },
+    {
+      "id": "B07",
+      "ad": "Galeri B07",
+      "from": "N5",
+      "to": "N6",
+      "A": 14,
+      "L": 400,
+      "k": 0.012,
+      "R": 0.0264,
+      "tip": "galeri"
+    },
+    {
+      "id": "B08",
+      "ad": "Galeri B08",
+      "from": "N6",
+      "to": "N7",
+      "A": 14,
+      "L": 400,
+      "k": 0.012,
+      "R": 0.0264,
+      "tip": "galeri"
+    },
+    {
+      "id": "B09",
+      "ad": "Kuyu + fan B09",
+      "from": "N7",
+      "to": "N0",
+      "A": 19.6,
+      "L": 300,
+      "k": 0.004,
+      "R": 0.0028,
+      "tip": "kuyu",
+      "fan": {
+        "id": "ana_1",
+        "ad": "Ana fan",
+        "p0": 3000,
+        "k": 0.0826,
+        "aciklama": "P_fan = p0 - k*Q^2 (Pa)"
+      }
+    },
+    {
+      "id": "B10",
+      "ad": "Hava kapisi B10",
+      "from": "N1",
+      "to": "N6",
+      "A": 9,
+      "L": 40,
+      "k": 0.012,
+      "R": 5000,
+      "tip": "kapi",
+      "kapi": {
+        "id": "QAPI_1",
+        "acik_R": 0.05,
+        "bagli_R": 5000,
+        "varsayilan": "bagli"
+      }
+    },
+    {
+      "id": "B11",
+      "ad": "Tenzim B11",
+      "from": "N5",
+      "to": "N6",
+      "A": 10,
+      "L": 250,
+      "k": 0.012,
+      "R": 0.0383,
+      "tip": "tenzim",
+      "tenzim": {
+        "id": "T1",
+        "min_R": 0.038,
+        "max_R": 12,
+        "varsayilan_acilim": 100
+      }
+    }
+  ],
+  "gaz_kaynaklari": [
+    {
+      "arin": "ARIN_1",
+      "kol": "B03",
+      "ch4_m3_s": 0.22,
+      "aciklama": "Metan cikisi"
+    },
+    {
+      "arin": "ARIN_2",
+      "kol": "B06",
+      "ch4_m3_s": 0.22,
+      "aciklama": "Metan cikisi"
+    }
+  ],
+  "esikler": {
+    "ch4": {
+      "p3": 1,
+      "p2": 1.5,
+      "p1": 2,
+      "birim": "%"
+    },
+    "o2": {
+      "p1_alt": 19,
+      "birim": "%"
+    },
+    "co": {
+      "p2": 30,
+      "p1": 50,
+      "birim": "ppm"
+    },
+    "arin_min_hiz": {
+      "deger": 0.5,
+      "birim": "m/s"
+    }
+  }
+}

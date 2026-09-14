@@ -1,0 +1,25 @@
+id: S02
+ad: "Ana fan durdu - acil durum"
+aciklama: >
+  Ana fan elektrik arizasi nedeniyle durdu. Basinc kaynagi yok, sebeke cokuyor.
+  Metan tum arinlarda hizla birikmeye basliyor. Operator fani yeniden baslatmali,
+  konveyoru durdurmali (atesleme kaynagi) ve sump'i kontrol altinda tutmali.
+sure_sn: 240
+
+olaylar:
+  - t: 30
+    tip: ariza
+    ad: "ANA FAN DURDU (elektrik arizasi)"
+    etki: { hedef: "fan.ana_1", emr: "dayandir" }
+
+optimal:
+  - t_hedef: 60
+    ad: "Konveyor durduruldu (atesleme kaynagi kaldirildi)"
+    kontrol: { hedef: "konveyer.K1", emr: "dayandir" }
+  - t_hedef: 75
+    ad: "Ana fan yeniden baslatildi"
+    kontrol: { hedef: "fan.ana_1", emr: "basla" }
+
+basari:
+  - { etiket: "fan.ana_1.debi", kosul: "ust", deger: 100.0 }
+  - { etiket: "qaz.ch4.ARIN_2", kosul: "alt", deger: 1.0 }

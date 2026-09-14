@@ -1,0 +1,22 @@
+id: S01
+ad: "QAPI 1 acik kaldi - kisa devre"
+aciklama: >
+  Vardiya degisiminde QAPI 1 tam kapatilmamis. Hava ana yoldan donus yoluna
+  kisa devre yapiyor. Fan debisi ARTIYOR ama arinlara giden hava DUSUYOR.
+  Operatorun ogrenmesi gereken: toplam debi artisi "her sey yolunda" demek degildir.
+sure_sn: 300
+
+olaylar:
+  - t: 45
+    tip: ariza
+    ad: "QAPI 1 acildi (vardiya degisimi)"
+    etki: { hedef: "qapi.QAPI_1", emr: "ac" }
+
+optimal:
+  - t_hedef: 90
+    ad: "QAPI 1 kapatildi"
+    kontrol: { hedef: "qapi.QAPI_1", emr: "bagla" }
+
+basari:
+  - { etiket: "qaz.ch4.ARIN_2", kosul: "alt", deger: 1.0 }
+  - { etiket: "arin.ARIN_2.debi", kosul: "ust", deger: 33.0 }

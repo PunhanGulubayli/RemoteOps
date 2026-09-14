@@ -1,0 +1,145 @@
+/* RemoteOps — proses seması teması
+ *
+ * İki tema:
+ *   .tema-koyu  — klasik kontrol odası görünümü (karanlık oda, projeksiyon)
+ *   .tema-acik  — ANSI/ISA-101 High Performance HMI (aydınlık oda)
+ *
+ * Kural (ISA-18.2): doygun kırmızı / turuncu / sarı / macenta YALNIZCA alarm.
+ * Hava servisi renkleri bilerek SOLGUNDUR ki alarmla karışmasın.
+ */
+
+:root {
+  --p1: #FF2B2B;   /* kritik  */
+  --p2: #FF9800;   /* yüksek  */
+  --p3: #FFE000;   /* düşük   */
+  --p4: #FF35C8;   /* sensör  */
+}
+
+/* ------------------------------------------------------------ KOYU TEMA */
+.tema-koyu {
+  --zemin:      #0B1B2B;
+  --zemin-2:    #102A3E;
+  --panel:      #12293D;
+  --panel-2:    #0E2032;
+  --cizgi:      #2C4C68;
+  --kenar:      #3E6B8E;
+  --yazi:       #DCE8F2;
+  --yazi-dim:   #86A2BC;
+  --ek-dolgu:   #1C3A52;
+  --ek-kenar:   #6E96B8;
+  --ek-ic:      #24455F;
+  --temiz:      #3E8E7E;   /* temiz hava  — solgun teal */
+  --donus:      #A07A46;   /* dönüş havası — solgun oker */
+  --arin:       #7E6FA8;   /* arın        — solgun mor  */
+  --karma:      #5B7A93;
+  --kutu-fon:   #0A1725;
+}
+
+/* ------------------------------------------------------------ ACIK TEMA */
+.tema-acik {
+  --zemin:      #C8C8C8;
+  --panel:      #D6D6D6;
+  --panel-2:    #BFBFBF;
+  --cizgi:      #8C8C8C;
+  --kenar:      #404040;
+  --yazi:       #1A1A1A;
+  --yazi-dim:   #565656;
+  --ek-dolgu:   #FFFFFF;
+  --ek-kenar:   #404040;
+  --ek-ic:      #E4E4E4;
+  --temiz:      #6E9C93;
+  --donus:      #A88F63;
+  --arin:       #8C82AC;
+  --karma:      #909090;
+  --kutu-fon:   #FFFFFF;
+}
+
+/* ------------------------------------------------------------ SVG */
+#sema-svg { font-family: "Segoe UI", system-ui, sans-serif; }
+#sema-svg .zemin { fill: var(--zemin); }
+#sema-svg .yuzey { stroke: var(--kenar); stroke-width: 2; }
+
+/* --- kanallar --- */
+#sema-svg .kn-dis  { fill: none; stroke: var(--kenar); stroke-linejoin: round; stroke-linecap: round; }
+#sema-svg .kn-ic   { fill: none; stroke: var(--karma); stroke-linejoin: round; stroke-linecap: round; }
+#sema-svg .kn-akis { fill: none; stroke: var(--yazi); opacity: .30;
+                     stroke-dasharray: 8 18; stroke-linecap: butt; }
+#sema-svg .sv-temiz .kn-ic { stroke: var(--temiz); }
+#sema-svg .sv-donus .kn-ic { stroke: var(--donus); }
+#sema-svg .sv-arin  .kn-ic { stroke: var(--arin); }
+#sema-svg .kanal.sizinti .kn-dis,
+#sema-svg .kanal.sizinti .kn-ic { stroke-dasharray: 8 6; opacity: .75; }
+
+/* --- akış yönü okları (MSHA zorunlu) --- */
+#sema-svg .ok path { fill: var(--yazi); opacity: .55; }
+#sema-svg .ok.sv-temiz path { fill: var(--temiz); opacity: .95; }
+#sema-svg .ok.sv-donus path { fill: var(--donus); opacity: .95; }
+#sema-svg .ok.sv-arin  path { fill: var(--arin);  opacity: .95; }
+#sema-svg .ok.ters { /* yön JS ile transform üzerinden çevrilir */ }
+
+/* --- düğümler --- */
+#sema-svg .dg    { fill: var(--kenar); }
+#sema-svg .et-dg { font-size: 9px; fill: var(--yazi-dim); }
+
+/* --- ekipman --- */
+#sema-svg .ek-govde   { fill: var(--ek-ic); stroke: var(--ek-kenar); stroke-width: 1.6; }
+#sema-svg .ek-flans   { fill: var(--ek-kenar); }
+#sema-svg .ek-dolgu   { fill: var(--ek-dolgu); stroke: var(--ek-kenar); stroke-width: 1.5; }
+#sema-svg .ek-gobek   { fill: var(--ek-kenar); }
+#sema-svg .ek-motor   { fill: var(--ek-kenar); }
+#sema-svg .ek-cerceve { stroke: var(--ek-kenar); stroke-width: 2.4; }
+#sema-svg .ek-cerceve-k { stroke: var(--ek-kenar); stroke-width: 3.4; fill: none; }
+#sema-svg .ek-mesnet  { fill: var(--ek-kenar); }
+#sema-svg .ek-kule    { fill: none; stroke: var(--ek-kenar); stroke-width: 2.2; }
+#sema-svg .ek-kule-l  { stroke: var(--ek-kenar); stroke-width: 1.6; }
+#sema-svg .fan-kanat  { fill: var(--ek-ic); stroke: var(--ek-kenar); stroke-width: .9; }
+#sema-svg .fan-kanatlar { transform-origin: center; }
+#sema-svg .doner .fan-kanatlar { animation: fan-don 1.6s linear infinite; }
+@keyframes fan-don { to { transform: rotate(360deg); } }
+
+#sema-svg .ek-arin      { fill: var(--ek-ic); stroke: var(--ek-kenar); stroke-width: 1.8; }
+#sema-svg .ek-arin-tara { stroke: var(--arin); stroke-width: 1.6; fill: none; opacity: .8; }
+
+#sema-svg .et-ad   { font-size: 10.5px; font-weight: 600; fill: var(--yazi); }
+#sema-svg .et-blok { font-size: 12px; font-weight: 700; fill: var(--yazi); letter-spacing: .4px; }
+
+/* --- ölçüm balonu + okuma kutusu --- */
+#sema-svg .ol-cizgi  { stroke: var(--yazi-dim); stroke-width: 1; stroke-dasharray: 4 3; }
+#sema-svg .ol-balon  { fill: var(--kutu-fon); stroke: var(--ek-kenar); stroke-width: 1.5; }
+#sema-svg .ol-ayirac { stroke: var(--ek-kenar); stroke-width: 1; }
+#sema-svg .ol-fn     { font-size: 9.5px; font-weight: 700; fill: var(--yazi); }
+#sema-svg .ol-no     { font-size: 9px; fill: var(--yazi-dim); }
+#sema-svg .ol-kutu   { fill: var(--kutu-fon); stroke: var(--ek-kenar); stroke-width: 1.2; }
+#sema-svg .ol-deger  { font-size: 14px; font-weight: 700; fill: var(--yazi);
+                       font-variant-numeric: tabular-nums; }
+#sema-svg .ol-birim  { font-size: 8.5px; fill: var(--yazi-dim); }
+#sema-svg .ol-etiket { font-size: 8.5px; fill: var(--yazi-dim); letter-spacing: .3px; }
+
+/* --- lejant --- */
+#sema-svg .lg-kutu   { fill: var(--panel-2); stroke: var(--kenar); stroke-width: 1; opacity: .93; }
+#sema-svg .lg-baslik { font-size: 10px; font-weight: 700; fill: var(--yazi); letter-spacing: .6px; }
+#sema-svg .lg-yazi   { font-size: 10px; fill: var(--yazi); }
+#sema-svg .lg-not    { font-size: 8.5px; fill: var(--yazi-dim); }
+#sema-svg .lg-cizgi  { stroke-width: 6; stroke-linecap: round; stroke: var(--karma); }
+#sema-svg .lg-cizgi.sv-temiz { stroke: var(--temiz); }
+#sema-svg .lg-cizgi.sv-donus { stroke: var(--donus); }
+#sema-svg .lg-cizgi.sv-arin  { stroke: var(--arin); }
+
+/* --- etkileşim --- */
+#sema-svg .tik { cursor: pointer; }
+#sema-svg .tik:hover .ek-govde,
+#sema-svg .tik:hover .ek-dolgu { filter: brightness(1.28); }
+
+/* --- yardımcı sistemler şeridi --- */
+#sema-svg .band-ayirac { stroke: var(--kenar); stroke-width: 1; stroke-dasharray: 4 4; }
+#sema-svg .band-baslik { font-size: 10px; font-weight: 700; letter-spacing: .8px;
+                         fill: var(--yazi-dim); }
+#sema-svg .ek-tank    { fill: var(--kutu-fon); stroke: none; }
+#sema-svg .ek-tank-on { fill: none; stroke: var(--ek-kenar); stroke-width: 1.8; }
+#sema-svg .ek-tank-alt{ fill: var(--ek-ic); stroke: var(--ek-kenar); stroke-width: 1.8; }
+#sema-svg .ek-su      { fill: var(--temiz); opacity: .55; }
+#sema-svg .ek-su-hat  { fill: none; stroke: var(--temiz); stroke-width: 3.4;
+                        stroke-linecap: round; opacity: .8; }
+#sema-svg .ek-bant    { fill: none; stroke: var(--ek-kenar); stroke-width: 2.4; }
+#sema-svg .ek-bant-yuk{ fill: none; stroke: var(--arin); stroke-width: 6;
+                        stroke-linecap: round; opacity: .85; }

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RemoteOps — Sema Editoru</title>
+<style>
+  :root {
+    --fon:#C8C8C8; --panel:#D6D6D6; --panel-koyu:#BFBFBF; --kontur:#404040;
+    --yazi:#1A1A1A; --soluk:#555; --sec:#0066CC; --hata:#FF0000; --ok:#128A12;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fon);color:var(--yazi);
+       font-family:"Segoe UI",system-ui,sans-serif;font-size:13px;
+       height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  header{display:flex;align-items:center;gap:10px;padding:6px 12px;
+         background:var(--panel-koyu);border-bottom:2px solid var(--kontur);flex:0 0 auto}
+  header .marka{font-weight:700;font-size:15px}
+  header .bosluk{flex:1}
+  button{font:inherit;padding:4px 11px;border:1px solid var(--kontur);
+         background:#fff;color:var(--yazi);cursor:pointer}
+  button:hover{background:#EFEFEF}
+  button.aktif{background:var(--kontur);color:#fff}
+  input,select{font:inherit;padding:3px 5px;border:1px solid var(--kontur);background:#fff;width:100%}
+
+  main{flex:1;display:flex;gap:8px;padding:8px 12px 12px;min-height:0}
+  .arac{flex:0 0 170px;display:flex;flex-direction:column;gap:6px}
+  .kanvas{flex:1 1 auto;min-width:0;background:#fff;border:1px solid var(--kontur);position:relative}
+  .kanvas svg{width:100%;height:100%;display:block}
+  .ozellik{flex:0 0 290px;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto}
+
+  .kutu{background:var(--panel);border:1px solid var(--kontur)}
+  .kutu h3{margin:0;padding:4px 8px;font-size:11px;font-weight:700;letter-spacing:.4px;
+           background:var(--panel-koyu);border-bottom:1px solid var(--kontur)}
+  .kutu .ic{padding:7px 8px;display:flex;flex-direction:column;gap:6px}
+  .satir{display:grid;grid-template-columns:96px 1fr;gap:6px;align-items:center}
+  .satir label{font-size:11px;color:var(--soluk)}
+  .ipucu{font-size:11px;color:var(--soluk);line-height:1.45}
+
+  /* kanvas elemanlari */
+  .dugum{fill:#fff;stroke:var(--kontur);stroke-width:2;cursor:grab}
+  .dugum.atmosfer{fill:#404040}
+  .dugum.secili{stroke:var(--sec);stroke-width:3.5}
+  .kol{stroke:#8A8A8A;stroke-width:7;fill:none;cursor:pointer;stroke-linecap:round}
+  .kol.arin{stroke:#4A4A4A;stroke-width:10}
+  .kol.kapi{stroke:#8A8A8A;stroke-dasharray:10 6}
+  .kol.tenzim{stroke:#6E6E6E;stroke-dasharray:3 3}
+  .kol.sizinti{stroke:#B0B0B0;stroke-width:3;stroke-dasharray:6 5}
+  .kol.kuyu{stroke-width:11}
+  .kol.secili{stroke:var(--sec)}
+  .kol-tik{stroke:transparent;stroke-width:16;fill:none;cursor:pointer}
+  .et{font-size:10px;fill:var(--soluk);pointer-events:none}
+  .et-kol{font-size:9.5px;fill:#333;pointer-events:none}
+  .izgara{stroke:#E8E8E8;stroke-width:1}
+  .onizleme{stroke:var(--sec);stroke-width:2;stroke-dasharray:5 4;fill:none;pointer-events:none}
+
+  .sonuc{font-size:11.5px;line-height:1.5;max-height:190px;overflow:auto}
+  .sonuc .ok{color:var(--ok)} .sonuc .hata{color:var(--hata);font-weight:600}
+  table.mini{width:100%;border-collapse:collapse;font-size:11px}
+  table.mini td{padding:1px 3px;border-bottom:1px solid #C0C0C0}
+  table.mini td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<header>
+  <span class="marka">RemoteOps</span>
+  <span style="color:var(--soluk)">Sema Editoru</span>
+  <select id="yukle-sec" style="width:auto"></select>
+  <button id="btn-yukle">Yukle</button>
+  <button id="btn-yeni">Yeni</button>
+  <span class="bosluk"></span>
+  <input id="sema-ad" style="width:200px" placeholder="sema adi (or. ocak2)">
+  <button id="btn-dogrula">Dogrula</button>
+  <button id="btn-kaydet">Kaydet</button>
+  <a href="index.html"><button>Simulatore Don</button></a>
+</header>
+
+<main>
+  <!-- ---------- ARAC CUBUGU ---------- -->
+  <div class="arac">
+    <div class="kutu"><h3>ARAC</h3><div class="ic">
+      <button class="mod aktif" data-mod="sec">Sec / Tasi</button>
+      <button class="mod" data-mod="dugum">Dugum Ekle</button>
+      <button class="mod" data-mod="kol">Kol Ciz</button>
+      <button class="mod" data-mod="sil">Sil</button>
+    </div></div>
+
+    <div class="kutu"><h3>KOL TIPI</h3><div class="ic">
+      <select id="kol-tip">
+        <option value="galeri">Galeri (yol)</option>
+        <option value="arin">Arin (uretim)</option>
+        <option value="kuyu">Kuyu</option>
+        <option value="kuyu_fan">Kuyu + ANA FAN</option>
+        <option value="kapi">Hava kapisi</option>
+        <option value="tenzim">Tenzim (regulator)</option>
+        <option value="sizinti">Baraj sizintisi</option>
+      </select>
+      <div class="ipucu">Once tipi sec, sonra <b>Kol Ciz</b> modunda iki dugume tikla.</div>
+    </div></div>
+
+    <div class="kutu"><h3>YARDIM</h3><div class="ic">
+      <div class="ipucu">
+        • Her agda <b>bir atmosfer dugumu</b> olmali (ilk dugum otomatik).<br>
+        • Giris ve cikis kuyusu ayni atmosfer dugumune baglanir — devre boylece kapanir.<br>
+        • En az <b>bir ANA FAN</b> gerekir, yoksa hava akmaz.<br>
+        • <b>Dogrula</b> agi gercek fizik motorunda cozer.
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ---------- KANVAS ---------- -->
+  <div class="kanvas"><svg id="kanvas" viewBox="0 0 1020 620"></svg></div>
+
+  <!-- ---------- OZELLIKLER ---------- -->
+  <div class="ozellik">
+    <div class="kutu"><h3>OZELLIKLER</h3><div class="ic" id="ozellik-ic">
+      <div class="ipucu">Bir dugum veya kol secin.</div>
+    </div></div>
+
+    <div class="kutu"><h3>DOGRULAMA</h3><div class="ic">
+      <div class="sonuc" id="dogrulama">
+        <span style="color:var(--soluk)">Henuz dogrulanmadi.</span>
+      </div>
+    </div></div>
+  </div>
+</main>
+
+<script src="editor.js"></script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+{
+  "tip": "init",
+  "sema": "ocak1",
+  "senaryo": {
+    "id": "S01",
+    "ad": "QAPI 1 acik kaldi - kisa devre",
+    "sure_sn": 300
+  },
+  "etiketler": {
+    "qaz.ch4.ARIN_1": {
+      "vahid": "%",
+      "min": 0,
+      "max": 5,
+      "normal": [
+        0,
+        1.0
+      ],
+      "p3": 1.0,
+      "p2": 1.5,
+      "p1": 2.0
+    },
+    "arin.ARIN_1.debi": {
+      "vahid": "m3/s",
+      "min": 0,
+      "max": 60,
+      "normal": [
+        25,
+        50
+      ],
+      "p2": 20
+    },
+    "arin.ARIN_1.hiz": {
+      "vahid": "m/s",
+      "min": 0,
+      "max": 8,
+      "normal": [
+        1.5,
+        6.0
+      ],
+      "p2": 1.5
+    },
+    "qaz.ch4.ARIN_2": {
+      "vahid": "%",
+      "min": 0,
+      "max": 5,
+      "normal": [
+        0,
+        1.0
+      ],
+      "p3": 1.0,
+      "p2": 1.5,
+      "p1": 2.0
+    },
+    "arin.ARIN_2.debi": {
+      "vahid": "m3/s",
+      "min": 0,
+      "max": 60,
+      "normal": [
+        25,
+        50
+      ],
+      "p2": 20
+    },
+    "arin.ARIN_2.hiz": {
+      "vahid": "m/s",
+      "min": 0,
+      "max": 8,
+      "normal": [
+        1.5,
+        6.0
+      ],
+      "p2": 1.5
+    },
+    "qaz.ch4.ARIN_3": {
+      "vahid": "%",
+      "min": 0,
+      "max": 5,
+      "normal": [
+        0,
+        1.0
+      ],
+      "p3": 1.0,
+      "p2": 1.5,
+      "p1": 2.0
+    },
+    "arin.ARIN_3.debi": {
+      "vahid": "m3/s",
+      "min": 0,
+      "max": 60,
+      "normal": [
+        25,
+        50
+      ],
+      "p2": 20
+    },
+    "arin.ARIN_3.hiz": {
+      "vahid": "m/s",
+      "min": 0,
+      "max": 8,
+      "normal": [
+        1.5,
+        6.0
+      ],
+      "p2": 1.5
+    },
+    "fan.ana_1.debi": {
+      "vahid": "m3/s",
+      "min": 0,
+      "max": 180,
+      "normal": [
+        100,
+        140
+      ],
+      "p2": 90
+    },
+    "fan.ana_1.basinc": {
+      "vahid": "Pa",
+      "min": 0,
+      "max": 3200,
+      "normal": [
+        1500,
+        2400
+      ]
+    },
+    "fan.ana_1.guc": {
+      "vahid": "kW",
+      "min": 0,
+      "max": 500,
+      "normal": [
+        200,
+        350
+      ]
+    },
+    "sump.S1.seviyye": {
+      "vahid": "%",
+      "min": 0,
+      "max": 100,
+      "normal": [
+        20,
+        70
+      ],
+      "p3": 75,
+      "p1": 92
+    },
+    "konveyer.K1.yuk": {
+      "vahid": "%",
+      "min": 0,
+      "max": 120,
+      "normal": [
+        30,
+        85
+      ]
+    },
+    "konveyer.K1.akim": {
+      "vahid": "A",
+      "min": 0,
+      "max": 280,
+      "normal": [
+        80,
+        200
+      ],
+      "p2": 210
+    }
+  }
+}

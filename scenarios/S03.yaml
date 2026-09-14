@@ -1,0 +1,43 @@
+id: S03
+ad: "Normallesmis sapma - gaz emisyonu artisi"
+aciklama: >
+  EN ONEMLI SENARYO. CH4 saatlerce %1.5-2.0 arasinda gezinir, alarm tekrar tekrar
+  calar. Kolay yol: ACK basip devam etmek. Sistem tam olarak bunu olcer -
+  operator NE ZAMAN "bu normal degil" deyip uretimi durdurmaya karar verdi?
+
+  Dayanak: Amasra 2022 bilirkisi raporu - merkezi gaz izleme sistemi verilerine
+  gore metan mukerreren %1.5 ve %2'nin uzerinde kalmis, ancak yaptirim
+  uygulanmamistir. Veri vardi; karar zinciri isledi mi, islemedi mi - olculen budur.
+sure_sn: 420
+
+olaylar:
+  - t: 40
+    tip: ariza
+    ad: "Damardan gaz cikisi artmaya basladi"
+    etki: { gaz_carpani: { ARIN_2: 1.9 } }
+  - t: 140
+    tip: ariza
+    ad: "Gaz cikisi artmaya devam ediyor"
+    etki: { gaz_carpani: { ARIN_2: 2.3 } }
+  - t: 200
+    tip: ariza
+    ad: "Sump su girisi artti (damar suyu)"
+    etki: { su_girisi: 0.105 }
+  - t: 260
+    tip: ariza
+    ad: "Gaz cikisi kritik seviyeye ulasti"
+    etki: { gaz_carpani: { ARIN_2: 2.9 } }
+
+optimal:
+  - t_hedef: 120
+    ad: "TENZIM 1 acilarak ARIN 2'ye seyreltme havasi artirildi"
+    kontrol: { hedef: "tenzim.T1", emr: "ayarla" }
+  - t_hedef: 180
+    ad: "Konveyor durduruldu - uretim kesildi"
+    kontrol: { hedef: "konveyer.K1", emr: "dayandir" }
+  - t_hedef: 240
+    ad: "Ikinci pompa (P2) devreye alindi"
+    kontrol: { hedef: "nasos.P2", emr: "basla" }
+
+basari:
+  - { etiket: "qaz.ch4.ARIN_2", kosul: "alt", deger: 1.5 }

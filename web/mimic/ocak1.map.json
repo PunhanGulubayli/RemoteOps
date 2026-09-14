@@ -1,0 +1,101 @@
+{
+  "sema": "ocak1",
+  "svg": "ocak1.svg",
+  "versiya": "1.0",
+  "aciklama": "SVG element id'lerini motor etiketlerine baglar. YENI BIR SIRKET ICIN: kendi SVG'sini koy + bu dosyayi yeniden yaz. KOD DEGISMEZ.",
+
+  "elemanlar": {
+    "FAN_ana_1_debi":   { "tip": "deger", "baglanti": "fan.ana_1.debi",   "ondalik": 1 },
+    "FAN_ana_1_basinc": { "tip": "deger", "baglanti": "fan.ana_1.basinc", "ondalik": 0 },
+    "FAN_ana_1_guc":    { "tip": "deger", "baglanti": "fan.ana_1.guc",    "ondalik": 0 },
+    "FAN_ana_1_durum":  { "tip": "durum", "baglanti": "fan.ana_1.durum" },
+    "FAN_ana_1_govde":  { "tip": "govde", "baglanti": "fan.ana_1.durum",
+                          "dolu_durumlar": ["isliyir"] },
+    "FAN_ana_1": { "tiklanabilir": true, "hedef": "fan.ana_1", "emr": "degistir",
+                   "emirler": { "isliyir": "dayandir", "dayandi": "basla" },
+                   "baglanti": "fan.ana_1.durum", "etiket": "ANA FAN" },
+
+    "ARIN_1_ch4":      { "tip": "deger", "baglanti": "qaz.ch4.ARIN_1", "ondalik": 2 },
+    "ARIN_1_ch4_bar":  { "tip": "bar", "baglanti": "qaz.ch4.ARIN_1",
+                         "min": 0, "max": 5, "x": 26, "genislik": 96 },
+    "ARIN_1_debi":     { "tip": "deger", "baglanti": "arin.ARIN_1.debi", "ondalik": 1 },
+    "ARIN_1_debi_bar": { "tip": "bar", "baglanti": "arin.ARIN_1.debi",
+                         "min": 0, "max": 60, "x": 26, "genislik": 96 },
+
+    "ARIN_2_ch4":      { "tip": "deger", "baglanti": "qaz.ch4.ARIN_2", "ondalik": 2 },
+    "ARIN_2_ch4_bar":  { "tip": "bar", "baglanti": "qaz.ch4.ARIN_2",
+                         "min": 0, "max": 5, "x": 26, "genislik": 96 },
+    "ARIN_2_debi":     { "tip": "deger", "baglanti": "arin.ARIN_2.debi", "ondalik": 1 },
+    "ARIN_2_debi_bar": { "tip": "bar", "baglanti": "arin.ARIN_2.debi",
+                         "min": 0, "max": 60, "x": 26, "genislik": 96 },
+
+    "ARIN_3_ch4":      { "tip": "deger", "baglanti": "qaz.ch4.ARIN_3", "ondalik": 2 },
+    "ARIN_3_ch4_bar":  { "tip": "bar", "baglanti": "qaz.ch4.ARIN_3",
+                         "min": 0, "max": 5, "x": 26, "genislik": 96 },
+    "ARIN_3_debi":     { "tip": "deger", "baglanti": "arin.ARIN_3.debi", "ondalik": 1 },
+    "ARIN_3_debi_bar": { "tip": "bar", "baglanti": "arin.ARIN_3.debi",
+                         "min": 0, "max": 60, "x": 26, "genislik": 96 },
+
+    "QAPI_1_durum": { "tip": "durum", "baglanti": "qapi.QAPI_1.durum" },
+    "QAPI_1_govde": { "tip": "govde", "baglanti": "qapi.QAPI_1.durum",
+                      "dolu_durumlar": ["bagli"] },
+    "QAPI_1": { "tiklanabilir": true, "hedef": "qapi.QAPI_1", "emr": "degistir",
+                "emirler": { "acik": "bagla", "bagli": "ac" },
+                "baglanti": "qapi.QAPI_1.durum", "etiket": "QAPI 1" },
+
+    "QAPI_2_durum": { "tip": "durum", "baglanti": "qapi.QAPI_2.durum" },
+    "QAPI_2_govde": { "tip": "govde", "baglanti": "qapi.QAPI_2.durum",
+                      "dolu_durumlar": ["bagli"] },
+    "QAPI_2": { "tiklanabilir": true, "hedef": "qapi.QAPI_2", "emr": "degistir",
+                "emirler": { "acik": "bagla", "bagli": "ac" },
+                "baglanti": "qapi.QAPI_2.durum", "etiket": "QAPI 2" },
+
+    "T1_acilim": { "tip": "deger", "baglanti": "tenzim.T1.acilim", "ondalik": 0 },
+    "T1": { "tiklanabilir": true, "hedef": "tenzim.T1", "emr": "ayarla",
+            "giris": { "min": 0, "max": 100, "adim": 10 },
+            "baglanti": "tenzim.T1.acilim", "etiket": "TENZIM 1 acilimi (%)" },
+
+    "SUMP_S1_seviyye": { "tip": "deger", "baglanti": "sump.S1.seviyye", "ondalik": 1 },
+    "SUMP_S1_bar":     { "tip": "bar", "baglanti": "sump.S1.seviyye",
+                         "min": 0, "max": 100, "x": 0, "genislik": 130 },
+
+    "NASOS_P1_durum": { "tip": "durum", "baglanti": "nasos.P1.durum" },
+    "NASOS_P1_govde": { "tip": "govde", "baglanti": "nasos.P1.durum",
+                        "dolu_durumlar": ["isliyir"] },
+    "NASOS_P1": { "tiklanabilir": true, "hedef": "nasos.P1", "emr": "degistir",
+                  "emirler": { "isliyir": "dayandir", "dayandi": "basla" },
+                  "baglanti": "nasos.P1.durum", "etiket": "NASOS P1" },
+
+    "NASOS_P2_durum": { "tip": "durum", "baglanti": "nasos.P2.durum" },
+    "NASOS_P2_govde": { "tip": "govde", "baglanti": "nasos.P2.durum",
+                        "dolu_durumlar": ["isliyir"] },
+    "NASOS_P2": { "tiklanabilir": true, "hedef": "nasos.P2", "emr": "degistir",
+                  "emirler": { "isliyir": "dayandir", "dayandi": "basla" },
+                  "baglanti": "nasos.P2.durum", "etiket": "NASOS P2" },
+
+    "KONVEYER_K1_akim":  { "tip": "deger", "baglanti": "konveyer.K1.akim", "ondalik": 0 },
+    "KONVEYER_K1_yuk":   { "tip": "deger", "baglanti": "konveyer.K1.yuk",  "ondalik": 0 },
+    "KONVEYER_K1_durum": { "tip": "durum", "baglanti": "konveyer.K1.durum" },
+    "KONVEYER_K1_govde": { "tip": "govde", "baglanti": "konveyer.K1.durum",
+                           "dolu_durumlar": ["isliyir"] },
+    "KONVEYER_K1": { "tiklanabilir": true, "hedef": "konveyer.K1", "emr": "degistir",
+                     "emirler": { "isliyir": "dayandir", "dayandi": "basla",
+                                  "ariza": "basla" },
+                     "baglanti": "konveyer.K1.durum", "etiket": "KONVEYOR K1" }
+  },
+
+  "alarm_vurgu": {
+    "aciklama": "Alarm aktif olunca hangi SVG grubu vurgulanacak (etiket -> grup id)",
+    "qaz.ch4.ARIN_1": "grup-ARIN_1",
+    "qaz.ch4.ARIN_2": "grup-ARIN_2",
+    "qaz.ch4.ARIN_3": "grup-ARIN_3",
+    "arin.ARIN_1.hiz": "grup-ARIN_1",
+    "arin.ARIN_2.hiz": "grup-ARIN_2",
+    "arin.ARIN_3.hiz": "grup-ARIN_3",
+    "fan.ana_1.durum": "FAN_ana_1",
+    "fan.ana_1.debi": "FAN_ana_1",
+    "sump.S1.seviyye": "SUMP_S1_bar",
+    "konveyer.K1.akim": "KONVEYER_K1",
+    "konveyer.K1.durum": "KONVEYER_K1"
+  }
+}
